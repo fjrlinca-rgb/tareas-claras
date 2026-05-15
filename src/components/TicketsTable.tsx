@@ -11,9 +11,10 @@ interface Props {
   tickets: Ticket[];
   onEdit: (t: Ticket) => void;
   onDelete: (t: Ticket) => void;
+  onFinalize: (t: Ticket) => void;
 }
 
-export const TicketsTable = ({ tickets, onEdit, onDelete }: Props) => {
+export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize }: Props) => {
   if (tickets.length === 0) {
     return (
       <Card className="p-12 text-center text-muted-foreground shadow-card">
