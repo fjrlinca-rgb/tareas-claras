@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Tickets", url: "/tickets", icon: Ticket },
+  { title: "Técnicos", url: "/tecnicos", icon: Users },
+  { title: "Reportes", url: "/reportes", icon: BarChart3 },
 ];
 
 export function AppSidebar() {
