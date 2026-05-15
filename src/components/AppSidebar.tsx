@@ -1,4 +1,4 @@
-import { LayoutDashboard, Ticket, Headset } from "lucide-react";
+import { LayoutDashboard, Ticket, Headset, Users, BarChart3 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
