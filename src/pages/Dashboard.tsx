@@ -42,14 +42,14 @@ const Dashboard = () => {
   const handleSave = async (values: { title: string; description: string | null; category: string; priority: Priority; due_date: string | null }) => {
     if (editing) {
       const { error } = await supabase.from("tasks").update(values).eq("id", editing.id);
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       toast.success("Tarea actualizada");
     } else {
       const { error } = await supabase.from("tasks").insert({ ...values, user_id: user!.id });
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       toast.success("Tarea creada");
     }
-    load();
+    await load();
   };
 
   const handleToggle = async (t: Task) => {
