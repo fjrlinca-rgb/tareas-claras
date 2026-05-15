@@ -66,6 +66,11 @@ export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize }: Props) =
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                    {t.status !== "finalizado" && (
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-status-finalizado hover:text-status-finalizado" onClick={() => onFinalize(t)} aria-label="Finalizar">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onEdit(t)} aria-label="Editar">
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
