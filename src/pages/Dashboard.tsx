@@ -1,28 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Search } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/StatCard";
 import { TicketsTable } from "@/components/TicketsTable";
 import { TicketDialog } from "@/components/TicketDialog";
-import { Ticket, Priority, Status, PRIORITIES, STATUSES, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/tickets";
+import { Ticket, Priority, Status } from "@/lib/tickets";
+import { seedDemoTickets } from "@/lib/seed";
 import { toast } from "sonner";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Ticket | null>(null);
-  const [search, setSearch] = useState("");
-  const [filterPriority, setFilterPriority] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
 
   const load = async () => {
     const { data, error } = await supabase
@@ -43,19 +42,7 @@ const Dashboard = () => {
     critica: tickets.filter((t) => t.priority === "critica" && t.status !== "finalizado").length,
   }), [tickets]);
 
-  const filtered = useMemo(() => {
-    return tickets.filter((t) => {
-      if (filterPriority !== "all" && t.priority !== filterPriority) return false;
-      if (filterStatus !== "all" && t.status !== filterStatus) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        return t.title.toLowerCase().includes(q)
-          || (t.description?.toLowerCase().includes(q) ?? false)
-          || (t.assigned_technician?.toLowerCase().includes(q) ?? false);
-      }
-      return true;
-    });
-  }, [tickets, filterPriority, filterStatus, search]);
+  const recent = useMemo(() => tickets.slice(0, 6), [tickets]);
 
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDialogOpen(true); };
@@ -90,17 +77,38 @@ const Dashboard = () => {
     await load();
   };
 
+  const handleSeed = async () => {
+    if (!user) return;
+    setSeeding(true);
+    try {
+      await seedDemoTickets(user.id);
+      toast.success("Datos de ejemplo cargados");
+      await load();
+    } catch (e: any) {
+      toast.error(e.message ?? "No se pudieron cargar los datos");
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   return (
-    <AppLayout title="Mesa de ayuda">
+    <AppLayout title="Dashboard">
       <div className="space-y-6 animate-fade-in max-w-[1400px]">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Panel de tickets</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">Panel de control</h2>
             <p className="text-muted-foreground text-sm mt-1">Resumen de la actividad de soporte técnico.</p>
           </div>
-          <Button onClick={openNew} size="lg" className="shadow-soft">
-            <Plus className="h-4 w-4 mr-1" /> Crear ticket
-          </Button>
+          <div className="flex gap-2">
+            {tickets.length === 0 && !loading && (
+              <Button onClick={handleSeed} variant="outline" size="lg" disabled={seeding}>
+                <Sparkles className="h-4 w-4 mr-1" /> {seeding ? "Cargando..." : "Cargar datos demo"}
+              </Button>
+            )}
+            <Button onClick={openNew} size="lg" className="shadow-soft">
+              <Plus className="h-4 w-4 mr-1" /> Crear ticket
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -110,38 +118,29 @@ const Dashboard = () => {
           <StatCard label="Críticos activos" value={stats.critica} icon={AlertOctagon} tone="destructive" />
         </div>
 
-        <Card className="p-4 shadow-card">
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por título, descripción o técnico..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select value={filterPriority} onValueChange={setFilterPriority}>
-              <SelectTrigger className="w-full md:w-[180px]"><SelectValue placeholder="Prioridad" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las prioridades</SelectItem>
-                {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{PRIORITY_LABEL[p]}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full md:w-[180px]"><SelectValue placeholder="Estado" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </Card>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Tickets recientes</h3>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/tickets")}>
+            Ver todos <ArrowRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
 
         {loading ? (
           <div className="space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
+        ) : recent.length === 0 ? (
+          <Card className="p-12 text-center shadow-card">
+            <p className="text-muted-foreground mb-4">Aún no tienes tickets registrados.</p>
+            <div className="flex justify-center gap-2">
+              <Button onClick={handleSeed} variant="outline" disabled={seeding}>
+                <Sparkles className="h-4 w-4 mr-1" /> Cargar datos demo
+              </Button>
+              <Button onClick={openNew}>
+                <Plus className="h-4 w-4 mr-1" /> Crear primer ticket
+              </Button>
+            </div>
+          </Card>
         ) : (
-          <TicketsTable tickets={filtered} onEdit={openEdit} onDelete={handleDelete} onFinalize={handleFinalize} />
+          <TicketsTable tickets={recent} onEdit={openEdit} onDelete={handleDelete} onFinalize={handleFinalize} />
         )}
       </div>
 
