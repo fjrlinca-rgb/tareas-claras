@@ -83,6 +83,13 @@ const Dashboard = () => {
     toast.success("Ticket eliminado");
   };
 
+  const handleFinalize = async (t: Ticket) => {
+    const { error } = await supabase.from("tickets").update({ status: "finalizado" }).eq("id", t.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Ticket finalizado");
+    await load();
+  };
+
   return (
     <AppLayout title="Mesa de ayuda">
       <div className="space-y-6 animate-fade-in max-w-[1400px]">
@@ -134,7 +141,7 @@ const Dashboard = () => {
         {loading ? (
           <div className="space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
         ) : (
-          <TicketsTable tickets={filtered} onEdit={openEdit} onDelete={handleDelete} />
+          <TicketsTable tickets={filtered} onEdit={openEdit} onDelete={handleDelete} onFinalize={handleFinalize} />
         )}
       </div>
 

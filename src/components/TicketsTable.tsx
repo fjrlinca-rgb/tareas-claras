@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Pencil, Trash2, User2 } from "lucide-react";
+import { Pencil, Trash2, User2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
@@ -11,9 +11,10 @@ interface Props {
   tickets: Ticket[];
   onEdit: (t: Ticket) => void;
   onDelete: (t: Ticket) => void;
+  onFinalize: (t: Ticket) => void;
 }
 
-export const TicketsTable = ({ tickets, onEdit, onDelete }: Props) => {
+export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize }: Props) => {
   if (tickets.length === 0) {
     return (
       <Card className="p-12 text-center text-muted-foreground shadow-card">
@@ -65,6 +66,11 @@ export const TicketsTable = ({ tickets, onEdit, onDelete }: Props) => {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                    {t.status !== "finalizado" && (
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-status-finalizado hover:text-status-finalizado" onClick={() => onFinalize(t)} aria-label="Finalizar">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onEdit(t)} aria-label="Editar">
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
