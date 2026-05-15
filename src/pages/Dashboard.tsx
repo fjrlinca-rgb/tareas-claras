@@ -141,7 +141,7 @@ const Dashboard = () => {
         {loading ? (
           <div className="space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
         ) : (
-          <TicketsTable tickets={filtered} onEdit={openEdit} onDelete={handleDelete} />
+          <TicketsTable tickets={filtered} onEdit={openEdit} onDelete={handleDelete} onFinalize={handleFinalize} />
         )}
       </div>
 
