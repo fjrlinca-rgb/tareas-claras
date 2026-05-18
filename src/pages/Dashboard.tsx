@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRealtimeEntradas } from "@/hooks/useRealtimeEntradas";
 import { Link, useNavigate } from "react-router-dom";
 import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +24,7 @@ const Dashboard = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Ticket | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const { data, error } = await supabase
       .from("entradas")
       .select("*")
@@ -31,9 +32,10 @@ const Dashboard = () => {
     if (error) toast.error(error.message);
     else setTickets((data ?? []) as Ticket[]);
     setLoading(false);
-  };
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
+  useRealtimeEntradas(load);
 
   const stats = useMemo(() => ({
     pendiente: tickets.filter((t) => t.status === "pendiente").length,
