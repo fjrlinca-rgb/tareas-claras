@@ -24,6 +24,9 @@ const TicketsPage = () => {
   const [search, setSearch] = useState("");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterTechnician, setFilterTechnician] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const load = useCallback(async () => {
     const { data, error } = await supabase
@@ -38,10 +41,17 @@ const TicketsPage = () => {
   useEffect(() => { load(); }, [load]);
   useRealtimeEntradas(load);
 
+  const technicians = useMemo(() => {
+    const s = new Set<string>();
+    tickets.forEach((t) => { if (t.assigned_technician) s.add(t.assigned_technician); });
+    return Array.from(s).sort();
+  }, [tickets]);
+
   const filtered = useMemo(() => {
     return tickets.filter((t) => {
       if (filterPriority !== "all" && t.priority !== filterPriority) return false;
       if (filterStatus !== "all" && t.status !== filterStatus) return false;
+      if (filterTechnician !== "all" && (t.assigned_technician ?? "__none__") !== filterTechnician) return false;
       if (search) {
         const q = search.toLowerCase();
         return t.title.toLowerCase().includes(q)
@@ -50,7 +60,16 @@ const TicketsPage = () => {
       }
       return true;
     });
-  }, [tickets, filterPriority, filterStatus, search]);
+  }, [tickets, filterPriority, filterStatus, filterTechnician, search]);
+
+  useEffect(() => { setPage(1); }, [search, filterPriority, filterStatus, filterTechnician]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = useMemo(
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage]
+  );
 
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDialogOpen(true); };
@@ -123,13 +142,35 @@ const TicketsPage = () => {
                 {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={filterTechnician} onValueChange={setFilterTechnician}>
+              <SelectTrigger className="w-full md:w-[200px]"><SelectValue placeholder="Técnico" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los técnicos</SelectItem>
+                <SelectItem value="__none__">Sin asignar</SelectItem>
+                {technicians.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </Card>
 
         {loading ? (
           <div className="space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
         ) : (
-          <TicketsTable tickets={filtered} onEdit={openEdit} onDelete={handleDelete} onFinalize={handleFinalize} />
+          <>
+            <TicketsTable tickets={paginated} onEdit={openEdit} onDelete={handleDelete} onFinalize={handleFinalize} />
+            {filtered.length > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  Mostrando {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} de {filtered.length}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>Anterior</Button>
+                  <span className="px-2">Página {currentPage} / {totalPages}</span>
+                  <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)}>Siguiente</Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
