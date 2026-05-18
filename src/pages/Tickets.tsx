@@ -25,7 +25,7 @@ const TicketsPage = () => {
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const { data, error } = await supabase
       .from("entradas")
       .select("*")
@@ -33,9 +33,10 @@ const TicketsPage = () => {
     if (error) toast.error(error.message);
     else setTickets((data ?? []) as Ticket[]);
     setLoading(false);
-  };
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
+  useRealtimeEntradas(load);
 
   const filtered = useMemo(() => {
     return tickets.filter((t) => {
