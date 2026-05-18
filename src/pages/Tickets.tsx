@@ -41,10 +41,17 @@ const TicketsPage = () => {
   useEffect(() => { load(); }, [load]);
   useRealtimeEntradas(load);
 
+  const technicians = useMemo(() => {
+    const s = new Set<string>();
+    tickets.forEach((t) => { if (t.assigned_technician) s.add(t.assigned_technician); });
+    return Array.from(s).sort();
+  }, [tickets]);
+
   const filtered = useMemo(() => {
     return tickets.filter((t) => {
       if (filterPriority !== "all" && t.priority !== filterPriority) return false;
       if (filterStatus !== "all" && t.status !== filterStatus) return false;
+      if (filterTechnician !== "all" && (t.assigned_technician ?? "__none__") !== filterTechnician) return false;
       if (search) {
         const q = search.toLowerCase();
         return t.title.toLowerCase().includes(q)
@@ -53,7 +60,16 @@ const TicketsPage = () => {
       }
       return true;
     });
-  }, [tickets, filterPriority, filterStatus, search]);
+  }, [tickets, filterPriority, filterStatus, filterTechnician, search]);
+
+  useEffect(() => { setPage(1); }, [search, filterPriority, filterStatus, filterTechnician]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = useMemo(
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage]
+  );
 
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDialogOpen(true); };
