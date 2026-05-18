@@ -24,7 +24,7 @@ const Dashboard = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Ticket | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const { data, error } = await supabase
       .from("entradas")
       .select("*")
@@ -32,9 +32,10 @@ const Dashboard = () => {
     if (error) toast.error(error.message);
     else setTickets((data ?? []) as Ticket[]);
     setLoading(false);
-  };
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
+  useRealtimeEntradas(load);
 
   const stats = useMemo(() => ({
     pendiente: tickets.filter((t) => t.status === "pendiente").length,
