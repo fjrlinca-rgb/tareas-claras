@@ -24,6 +24,9 @@ const TicketsPage = () => {
   const [search, setSearch] = useState("");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterTechnician, setFilterTechnician] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const load = useCallback(async () => {
     const { data, error } = await supabase
