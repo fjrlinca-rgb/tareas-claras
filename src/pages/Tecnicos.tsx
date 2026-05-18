@@ -17,7 +17,7 @@ const Tecnicos = () => {
   useEffect(() => { if (!authLoading && !user) navigate("/auth"); }, [authLoading, user, navigate]);
 
   useEffect(() => {
-    supabase.from("tickets").select("*").then(({ data }) => {
+    supabase.from("entradas").select("*").then(({ data }) => {
       setTickets((data ?? []) as Ticket[]);
       setLoading(false);
     });
