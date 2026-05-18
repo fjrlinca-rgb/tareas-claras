@@ -40,8 +40,8 @@
     --warning-soft: 35 95% 94%;
 
     /* Priority palette */
-    --priority-baja: 200 70% 50%;
-    --priority-baja-soft: 200 80% 95%;
+    --priority-baja: 215 15% 50%;
+    --priority-baja-soft: 215 15% 94%;
     --priority-media: 215 90% 52%;
     --priority-media-soft: 215 90% 95%;
     --priority-alta: 30 95% 50%;
@@ -111,8 +111,8 @@
     --warning-foreground: 0 0% 100%;
     --warning-soft: 35 35% 20%;
 
-    --priority-baja: 200 65% 60%;
-    --priority-baja-soft: 200 35% 20%;
+    --priority-baja: 215 12% 65%;
+    --priority-baja-soft: 215 10% 22%;
     --priority-media: 215 85% 62%;
     --priority-media-soft: 215 35% 20%;
     --priority-alta: 30 90% 58%;
