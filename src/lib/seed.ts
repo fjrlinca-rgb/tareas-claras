@@ -98,6 +98,6 @@ export const DEMO_TICKETS: SeedTicket[] = [
 
 export async function seedDemoTickets(userId: string) {
   const rows = DEMO_TICKETS.map((t) => ({ ...t, user_id: userId }));
-  const { error } = await supabase.from("tickets").insert(rows);
+  const { error } = await supabase.from("entradas").insert(rows);
   if (error) throw error;
 }

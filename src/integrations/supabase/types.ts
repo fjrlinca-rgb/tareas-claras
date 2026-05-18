@@ -14,7 +14,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      tickets: {
+      entradas: {
         Row: {
           assigned_technician: string | null
           created_at: string

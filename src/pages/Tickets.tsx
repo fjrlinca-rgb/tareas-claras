@@ -26,7 +26,7 @@ const TicketsPage = () => {
 
   const load = async () => {
     const { data, error } = await supabase
-      .from("tickets")
+      .from("entradas")
       .select("*")
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
@@ -57,11 +57,11 @@ const TicketsPage = () => {
     title: string; description: string | null; priority: Priority; status: Status; assigned_technician: string | null;
   }) => {
     if (editing) {
-      const { error } = await supabase.from("tickets").update(values).eq("id", editing.id);
+      const { error } = await supabase.from("entradas").update(values).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
       toast.success("Ticket actualizado");
     } else {
-      const { error } = await supabase.from("tickets").insert({ ...values, user_id: user!.id });
+      const { error } = await supabase.from("entradas").insert({ ...values, user_id: user!.id });
       if (error) { toast.error(error.message); return; }
       toast.success("Ticket creado");
     }
@@ -70,14 +70,14 @@ const TicketsPage = () => {
 
   const handleDelete = async (t: Ticket) => {
     if (!confirm(`¿Eliminar el ticket "${t.title}"?`)) return;
-    const { error } = await supabase.from("tickets").delete().eq("id", t.id);
+    const { error } = await supabase.from("entradas").delete().eq("id", t.id);
     if (error) { toast.error(error.message); return; }
     setTickets((prev) => prev.filter((x) => x.id !== t.id));
     toast.success("Ticket eliminado");
   };
 
   const handleFinalize = async (t: Ticket) => {
-    const { error } = await supabase.from("tickets").update({ status: "finalizado" }).eq("id", t.id);
+    const { error } = await supabase.from("entradas").update({ status: "finalizado" }).eq("id", t.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Ticket finalizado");
     await load();
