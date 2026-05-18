@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRealtimeEntradas } from "@/hooks/useRealtimeEntradas";
 import { Link, useNavigate } from "react-router-dom";
 import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
