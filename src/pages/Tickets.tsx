@@ -142,13 +142,35 @@ const TicketsPage = () => {
                 {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={filterTechnician} onValueChange={setFilterTechnician}>
+              <SelectTrigger className="w-full md:w-[200px]"><SelectValue placeholder="Técnico" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los técnicos</SelectItem>
+                <SelectItem value="__none__">Sin asignar</SelectItem>
+                {technicians.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </Card>
 
         {loading ? (
           <div className="space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
         ) : (
-          <TicketsTable tickets={filtered} onEdit={openEdit} onDelete={handleDelete} onFinalize={handleFinalize} />
+          <>
+            <TicketsTable tickets={paginated} onEdit={openEdit} onDelete={handleDelete} onFinalize={handleFinalize} />
+            {filtered.length > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  Mostrando {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} de {filtered.length}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>Anterior</Button>
+                  <span className="px-2">Página {currentPage} / {totalPages}</span>
+                  <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)}>Siguiente</Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
