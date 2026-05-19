@@ -147,11 +147,17 @@ const Dashboard = () => {
             </div>
           </Card>
         ) : (
-          <TicketsTable tickets={recent} onEdit={openEdit} onDelete={handleDelete} onFinalize={handleFinalize} />
+          <TicketsTable
+            tickets={recent}
+            role={role}
+            onEdit={openEdit}
+            onDelete={isSupervisor ? handleDelete : undefined}
+            onFinalize={isSupervisor || isTecnico ? handleFinalize : undefined}
+          />
         )}
       </div>
 
-      <TicketDialog open={dialogOpen} onOpenChange={setDialogOpen} onSave={handleSave} ticket={editing} />
+      <TicketDialog open={dialogOpen} onOpenChange={setDialogOpen} onSave={handleSave} ticket={editing} role={role} />
     </AppLayout>
   );
 };
