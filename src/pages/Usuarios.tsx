@@ -181,8 +181,8 @@ const UsuariosPage = () => {
                       <TableRow key={u.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-muted grid place-items-center shrink-0">
-                              <UserIcon className="h-4 w-4 text-muted-foreground" />
+                            <div className={`h-9 w-9 rounded-full grid place-items-center shrink-0 ${ROLE_BADGE[u.primary]}`}>
+                              <Icon className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
                               <p className="font-medium truncate">{u.email ?? "(sin email)"}</p>
@@ -191,8 +191,9 @@ const UsuariosPage = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-muted">
-                            <Icon className="h-3 w-3" /> {ROLE_LABEL[u.primary]}
+                          <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${ROLE_BADGE[u.primary]}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${ROLE_DOT[u.primary]}`} />
+                            {ROLE_LABEL[u.primary]}
                           </span>
                         </TableCell>
                         <TableCell>
