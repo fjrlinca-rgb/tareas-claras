@@ -77,7 +77,7 @@ const TicketsPage = () => {
     [filtered, currentPage]
   );
 
-  const canCreate = isCliente || isSupervisor;
+  const canCreate = isCliente;
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDialogOpen(true); };
 
