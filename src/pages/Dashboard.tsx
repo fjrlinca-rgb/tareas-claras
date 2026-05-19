@@ -136,16 +136,16 @@ const Dashboard = () => {
           <div className="space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
         ) : recent.length === 0 ? (
           <Card className="p-12 text-center shadow-card">
-            <p className="text-muted-foreground mb-4">Aún no tienes tickets registrados.</p>
+            <p className="text-muted-foreground mb-4">Aún no hay tickets registrados.</p>
             <div className="flex justify-center gap-2">
-              <Button onClick={handleSeed} variant="outline" disabled={seeding}>
-                <Sparkles className="h-4 w-4 mr-1" /> Cargar datos demo
-              </Button>
-              {isCliente && (
-                <Button onClick={openNew}>
-                  <Plus className="h-4 w-4 mr-1" /> Crear primer ticket
+              {isSupervisor && (
+                <Button onClick={handleSeed} variant="outline" disabled={seeding}>
+                  <Sparkles className="h-4 w-4 mr-1" /> Cargar datos demo
                 </Button>
               )}
+              <Button variant="outline" onClick={() => navigate("/tickets")}>
+                Ir a tickets <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
             </div>
           </Card>
         ) : (
