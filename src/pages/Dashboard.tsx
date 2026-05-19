@@ -107,16 +107,14 @@ const Dashboard = () => {
             <p className="text-muted-foreground text-sm mt-1">Resumen de la actividad de soporte técnico.</p>
           </div>
           <div className="flex gap-2">
-            {tickets.length === 0 && !loading && (
+            {isSupervisor && tickets.length === 0 && !loading && (
               <Button onClick={handleSeed} variant="outline" size="lg" disabled={seeding}>
                 <Sparkles className="h-4 w-4 mr-1" /> {seeding ? "Cargando..." : "Cargar datos demo"}
               </Button>
             )}
-            {isCliente && (
-              <Button onClick={openNew} size="lg" className="shadow-soft">
-                <Plus className="h-4 w-4 mr-1" /> Crear ticket
-              </Button>
-            )}
+            <Button variant="outline" size="lg" onClick={() => navigate("/tickets")}>
+              Ir a tickets <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
           </div>
         </div>
 
