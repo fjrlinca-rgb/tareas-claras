@@ -51,15 +51,17 @@ const Dashboard = () => {
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDialogOpen(true); };
 
+  const isOnlyCliente = !isSupervisor && !isTecnico;
+
   const handleSave = async (values: TicketFormValues) => {
     if (editing) {
       const payload: any = { ...values };
-      if (isCliente) { delete payload.status; delete payload.assigned_technician; delete payload.observations; }
+      if (isOnlyCliente) { delete payload.status; delete payload.assigned_technician; delete payload.observations; }
       const { error } = await supabase.from("entradas").update(payload).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
       toast.success("Ticket actualizado");
     } else {
-      const payload: any = isCliente
+      const payload: any = isOnlyCliente
         ? { title: values.title, description: values.description, priority: values.priority, status: "pendiente", user_id: user!.id }
         : { ...values, user_id: user!.id };
       const { error } = await supabase.from("entradas").insert(payload);
