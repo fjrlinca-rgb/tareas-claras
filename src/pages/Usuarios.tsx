@@ -17,6 +17,16 @@ interface UserItem extends ProfileRow { roles: AppRole[]; primary: AppRole; }
 
 const ROLE_LABEL: Record<AppRole, string> = { cliente: "Cliente", tecnico: "Técnico", supervisor: "Supervisor" };
 const ROLE_ICON = { cliente: UserIcon, tecnico: Wrench, supervisor: ShieldCheck } as const;
+const ROLE_BADGE: Record<AppRole, string> = {
+  cliente: "bg-primary-soft text-primary border border-primary/20",
+  tecnico: "bg-status-pendiente-soft text-status-pendiente border border-status-pendiente/20",
+  supervisor: "bg-status-finalizado-soft text-status-finalizado border border-status-finalizado/20",
+};
+const ROLE_DOT: Record<AppRole, string> = {
+  cliente: "bg-primary",
+  tecnico: "bg-status-pendiente",
+  supervisor: "bg-status-finalizado",
+};
 
 const primaryOf = (roles: AppRole[]): AppRole =>
   roles.includes("supervisor") ? "supervisor" : roles.includes("tecnico") ? "tecnico" : "cliente";
