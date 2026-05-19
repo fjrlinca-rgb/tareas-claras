@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRealtimeEntradas } from "@/hooks/useRealtimeEntradas";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/StatCard";
 import { TicketsTable } from "@/components/TicketsTable";
-import { TicketDialog } from "@/components/TicketDialog";
-import { Ticket, Priority, Status } from "@/lib/tickets";
+import { TicketDialog, TicketFormValues } from "@/components/TicketDialog";
+import { Ticket } from "@/lib/tickets";
 import { seedDemoTickets } from "@/lib/seed";
 import { toast } from "sonner";
 

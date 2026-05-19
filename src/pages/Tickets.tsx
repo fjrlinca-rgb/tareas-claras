@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRealtimeEntradas } from "@/hooks/useRealtimeEntradas";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, ShieldCheck, Wrench, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { AppLayout } from "@/components/AppLayout";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Button } from "@/components/ui/button";
@@ -11,12 +12,13 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TicketsTable } from "@/components/TicketsTable";
-import { TicketDialog } from "@/components/TicketDialog";
-import { Ticket, Priority, Status, PRIORITIES, STATUSES, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/tickets";
+import { TicketDialog, TicketFormValues } from "@/components/TicketDialog";
+import { Ticket, PRIORITIES, STATUSES, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/tickets";
 import { toast } from "sonner";
 
 const TicketsPage = () => {
   const { user } = useAuth();
+  const { primary: role, isSupervisor, isTecnico, isCliente, loading: roleLoading } = useUserRole();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -71,18 +73,34 @@ const TicketsPage = () => {
     [filtered, currentPage]
   );
 
+  const canCreate = isCliente || isSupervisor;
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDialogOpen(true); };
 
-  const handleSave = async (values: {
-    title: string; description: string | null; priority: Priority; status: Status; assigned_technician: string | null;
-  }) => {
+  const handleSave = async (values: TicketFormValues) => {
     if (editing) {
-      const { error } = await supabase.from("entradas").update(values).eq("id", editing.id);
+      const payload: any = { ...values };
+      // Cliente nunca debería editar (no le mostramos botón), pero por seguridad bloqueamos cambios sensibles
+      if (isCliente) {
+        delete payload.status;
+        delete payload.assigned_technician;
+        delete payload.observations;
+      }
+      const { error } = await supabase.from("entradas").update(payload).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
       toast.success("Ticket actualizado");
     } else {
-      const { error } = await supabase.from("entradas").insert({ ...values, user_id: user!.id });
+      // Crear: cliente fuerza pendiente y sin técnico
+      const payload: any = isCliente
+        ? {
+            title: values.title,
+            description: values.description,
+            priority: values.priority,
+            status: "pendiente",
+            user_id: user!.id,
+          }
+        : { ...values, user_id: user!.id };
+      const { error } = await supabase.from("entradas").insert(payload);
       if (error) { toast.error(error.message); return; }
       toast.success("Ticket creado");
     }
@@ -90,6 +108,7 @@ const TicketsPage = () => {
   };
 
   const handleDelete = async (t: Ticket) => {
+    if (!isSupervisor) return;
     if (!confirm(`¿Eliminar el ticket "${t.title}"?`)) return;
     const { error } = await supabase.from("entradas").delete().eq("id", t.id);
     if (error) { toast.error(error.message); return; }
@@ -104,17 +123,29 @@ const TicketsPage = () => {
     await load();
   };
 
+  const roleLabel = isSupervisor
+    ? { icon: ShieldCheck, label: "Supervisor", desc: "Gestión total de incidencias y asignación de técnicos." }
+    : isTecnico
+      ? { icon: Wrench, label: "Técnico", desc: "Tickets asignados a tu cuenta. Actualiza el estado al avanzar." }
+      : { icon: User, label: "Cliente", desc: "Crea tickets de soporte. El equipo te asignará un técnico." };
+  const RoleIcon = roleLabel.icon;
+
   return (
     <AppLayout title="Tickets">
       <div className="space-y-6 animate-fade-in max-w-[1400px]">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
+            <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground mb-1">
+              <RoleIcon className="h-3.5 w-3.5" /> Vista de {roleLabel.label}
+            </div>
             <h2 className="text-2xl font-semibold tracking-tight">Gestión de tickets</h2>
-            <p className="text-muted-foreground text-sm mt-1">Crea, asigna y resuelve incidencias de soporte.</p>
+            <p className="text-muted-foreground text-sm mt-1">{roleLabel.desc}</p>
           </div>
-          <Button onClick={openNew} size="lg" className="shadow-soft">
-            <Plus className="h-4 w-4 mr-1" /> Crear ticket
-          </Button>
+          {canCreate && (
+            <Button onClick={openNew} size="lg" className="shadow-soft">
+              <Plus className="h-4 w-4 mr-1" /> Crear ticket
+            </Button>
+          )}
         </div>
 
         <Card className="p-4 shadow-card">
@@ -142,22 +173,30 @@ const TicketsPage = () => {
                 {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={filterTechnician} onValueChange={setFilterTechnician}>
-              <SelectTrigger className="w-full md:w-[200px]"><SelectValue placeholder="Técnico" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los técnicos</SelectItem>
-                <SelectItem value="__none__">Sin asignar</SelectItem>
-                {technicians.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {isSupervisor && (
+              <Select value={filterTechnician} onValueChange={setFilterTechnician}>
+                <SelectTrigger className="w-full md:w-[200px]"><SelectValue placeholder="Técnico" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los técnicos</SelectItem>
+                  <SelectItem value="__none__">Sin asignar</SelectItem>
+                  {technicians.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </Card>
 
-        {loading ? (
+        {loading || roleLoading ? (
           <div className="space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
         ) : (
           <>
-            <TicketsTable tickets={paginated} onEdit={openEdit} onDelete={handleDelete} onFinalize={handleFinalize} />
+            <TicketsTable
+              tickets={paginated}
+              role={role}
+              onEdit={openEdit}
+              onDelete={isSupervisor ? handleDelete : undefined}
+              onFinalize={isSupervisor || isTecnico ? handleFinalize : undefined}
+            />
             {filtered.length > 0 && (
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
@@ -174,7 +213,14 @@ const TicketsPage = () => {
         )}
       </div>
 
-      <TicketDialog open={dialogOpen} onOpenChange={setDialogOpen} onSave={handleSave} ticket={editing} />
+      <TicketDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSave={handleSave}
+        ticket={editing}
+        role={role}
+        technicianOptions={technicians}
+      />
     </AppLayout>
   );
 };
