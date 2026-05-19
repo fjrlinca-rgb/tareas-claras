@@ -18,6 +18,7 @@ import { toast } from "sonner";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { primary: role, isSupervisor, isTecnico, isCliente } = useUserRole();
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,15 +51,18 @@ const Dashboard = () => {
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDialogOpen(true); };
 
-  const handleSave = async (values: {
-    title: string; description: string | null; priority: Priority; status: Status; assigned_technician: string | null;
-  }) => {
+  const handleSave = async (values: TicketFormValues) => {
     if (editing) {
-      const { error } = await supabase.from("entradas").update(values).eq("id", editing.id);
+      const payload: any = { ...values };
+      if (isCliente) { delete payload.status; delete payload.assigned_technician; delete payload.observations; }
+      const { error } = await supabase.from("entradas").update(payload).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
       toast.success("Ticket actualizado");
     } else {
-      const { error } = await supabase.from("entradas").insert({ ...values, user_id: user!.id });
+      const payload: any = isCliente
+        ? { title: values.title, description: values.description, priority: values.priority, status: "pendiente", user_id: user!.id }
+        : { ...values, user_id: user!.id };
+      const { error } = await supabase.from("entradas").insert(payload);
       if (error) { toast.error(error.message); return; }
       toast.success("Ticket creado");
     }
