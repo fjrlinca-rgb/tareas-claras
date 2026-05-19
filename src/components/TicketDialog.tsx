@@ -174,14 +174,16 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
               <SelectItem value={UNASSIGNED}>Sin asignar (temporal)</SelectItem>
               {technicians.map((t) => (
                 <SelectItem key={t.id} value={t.email}>
-                  {t.name ? `${t.name} · ${t.email}` : t.email}
-                  {t.specialty ? ` — ${t.specialty}` : ""}
+                  {(t.name || t.email)} · {t.email}
+                  {typeof t.ticketCount === "number" ? ` — ${t.ticketCount} abiertos` : ""}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {technicians.length === 0 && (
-            <p className="text-xs text-muted-foreground">No hay técnicos activos. Agrega uno desde el módulo Técnicos.</p>
+            <p className="text-xs text-muted-foreground">
+              No hay usuarios con rol <strong>técnico</strong>. Promueve un usuario desde el módulo <strong>Usuarios</strong> para que aparezca aquí.
+            </p>
           )}
         </div>
       )}
