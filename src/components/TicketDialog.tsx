@@ -8,9 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Priority, Status, Ticket, PRIORITY_LABEL, STATUS_LABEL, PRIORITIES, STATUSES } from "@/lib/tickets";
 import { AppRole } from "@/hooks/useUserRole";
-import { ShieldCheck, Wrench, User, History, Pencil } from "lucide-react";
+import { ShieldCheck, Wrench, User, History, Pencil, Building2, Calendar, AlertCircle, FileText } from "lucide-react";
 import { Technician } from "@/hooks/useTechnicians";
 import { TicketHistory } from "./TicketHistory";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 export interface TicketFormValues {
   title: string;
@@ -32,6 +35,13 @@ interface Props {
 
 const UNASSIGNED = "__unassigned__";
 
+const priorityTone: Record<string, string> = {
+  baja: "bg-muted text-muted-foreground",
+  media: "bg-blue-500/15 text-blue-400 border border-blue-500/30",
+  alta: "bg-orange-500/15 text-orange-400 border border-orange-500/30",
+  critica: "bg-red-500/15 text-red-400 border border-red-500/30",
+};
+
 export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technicians = [] }: Props) => {
   const isEdit = !!ticket;
   const isSupervisor = role === "supervisor";
@@ -46,6 +56,8 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
   const [observations, setObservations] = useState("");
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState("edit");
+  const [companyName, setCompanyName] = useState<string | null>(null);
+  const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -56,8 +68,33 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
       setTechnician(ticket?.assigned_technician ?? UNASSIGNED);
       setObservations((ticket as any)?.observations ?? "");
       setTab("edit");
+      setCompanyName(null);
+      setOwnerEmail(null);
     }
   }, [open, ticket]);
+
+  // Cargar empresa / correo del solicitante (solo supervisor en edición)
+  useEffect(() => {
+    if (!open || !isSupervisor || !ticket?.user_id) return;
+    (async () => {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("email, company_id, full_name")
+        .eq("id", ticket.user_id)
+        .maybeSingle();
+      setOwnerEmail(prof?.email ?? null);
+      if (prof?.company_id) {
+        const { data: comp } = await supabase
+          .from("companies")
+          .select("name")
+          .eq("id", prof.company_id)
+          .maybeSingle();
+        setCompanyName(comp?.name ?? prof.full_name ?? prof.email ?? null);
+      } else {
+        setCompanyName(prof?.full_name ?? prof?.email ?? null);
+      }
+    })();
+  }, [open, isSupervisor, ticket?.user_id]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +110,16 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
         priority: ticket!.priority as Priority,
         status,
         assigned_technician: ticket!.assigned_technician,
+        observations: observations.trim() || null,
+      };
+    } else if (isSupervisor && isEdit) {
+      // Supervisor en edición: solo técnico, estado y observaciones
+      values = {
+        title: ticket!.title,
+        description: ticket!.description,
+        priority: ticket!.priority as Priority,
+        status,
+        assigned_technician: technician === UNASSIGNED ? null : technician,
         observations: observations.trim() || null,
       };
     } else {
@@ -104,6 +151,121 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
     ? (isTecnico ? "Actualizar ticket asignado" : isCliente ? "Detalle del ticket" : "Gestionar ticket")
     : "Crear nuevo ticket";
 
+  // ============ VISTA SIMPLIFICADA SUPERVISOR (EDICIÓN) ============
+  if (isEdit && isSupervisor) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between gap-2">
+              <DialogTitle className="text-base">{ticket!.title}</DialogTitle>
+              {roleBadge}
+            </div>
+          </DialogHeader>
+
+          {/* Resumen del ticket (lectura) */}
+          <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="flex items-start gap-2">
+                <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Empresa</p>
+                  <p className="font-medium truncate">{companyName ?? ownerEmail ?? "—"}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Creado</p>
+                  <p className="font-medium">
+                    {ticket!.created_at ? format(new Date(ticket!.created_at), "d MMM yyyy HH:mm", { locale: es }) : "—"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Prioridad</p>
+                  <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-0.5 ${priorityTone[ticket!.priority] ?? ""}`}>
+                    {PRIORITY_LABEL[ticket!.priority as Priority] ?? ticket!.priority}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Estado actual</p>
+                  <p className="font-medium">{STATUS_LABEL[ticket!.status as Status] ?? ticket!.status}</p>
+                </div>
+              </div>
+            </div>
+            {ticket!.description && (
+              <div className="pt-2 border-t border-border/60">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Descripción del problema</p>
+                <p className="text-sm text-foreground/90 whitespace-pre-wrap">{ticket!.description}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Formulario compacto */}
+          <form onSubmit={submit} className="space-y-4 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="tech">Técnico asignado</Label>
+                <Select value={technician} onValueChange={setTechnician}>
+                  <SelectTrigger id="tech"><SelectValue placeholder="Selecciona un técnico" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={UNASSIGNED}>Sin asignar (temporal)</SelectItem>
+                    {technicians.map((t) => (
+                      <SelectItem key={t.id} value={t.email}>
+                        {(t.name || t.email)} · {t.email}
+                        {typeof t.ticketCount === "number" ? ` — ${t.ticketCount} abiertos` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {technicians.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No hay usuarios con rol <strong>técnico</strong>. Crea o promueve uno desde <strong>Usuarios</strong>.
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Estado</Label>
+                <Select value={status} onValueChange={(v) => setStatus(v as Status)}>
+                  <SelectTrigger id="status"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="obs">Observaciones internas</Label>
+              <Textarea id="obs" value={observations} onChange={(e) => setObservations(e.target.value)} rows={3} placeholder="Notas internas, diagnóstico, acciones realizadas..." />
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cerrar</Button>
+              <Button type="submit" disabled={saving}>{saving ? "Guardando..." : "Guardar cambios"}</Button>
+            </DialogFooter>
+          </form>
+
+          {/* Historial debajo */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <History className="h-4 w-4 text-muted-foreground" />
+              <h4 className="text-sm font-semibold">Historial de cambios</h4>
+            </div>
+            <TicketHistory ticketId={ticket!.id} />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // ============ VISTA POR DEFECTO (cliente / técnico / creación) ============
   const formBody = (
     <form onSubmit={submit} className="space-y-4">
       {isTecnico || isCliente && isEdit ? (
@@ -165,29 +327,6 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
         )}
       </div>
 
-      {isSupervisor && (
-        <div className="space-y-2">
-          <Label htmlFor="tech">Técnico asignado</Label>
-          <Select value={technician} onValueChange={setTechnician}>
-            <SelectTrigger id="tech"><SelectValue placeholder="Selecciona un técnico" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value={UNASSIGNED}>Sin asignar (temporal)</SelectItem>
-              {technicians.map((t) => (
-                <SelectItem key={t.id} value={t.email}>
-                  {(t.name || t.email)} · {t.email}
-                  {typeof t.ticketCount === "number" ? ` — ${t.ticketCount} abiertos` : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {technicians.length === 0 && (
-            <p className="text-xs text-muted-foreground">
-              No hay usuarios con rol <strong>técnico</strong>. Promueve un usuario desde el módulo <strong>Usuarios</strong> para que aparezca aquí.
-            </p>
-          )}
-        </div>
-      )}
-
       {isTecnico && ticket?.assigned_technician && (
         <div className="space-y-1">
           <Label className="text-muted-foreground">Asignado a</Label>
@@ -195,7 +334,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
         </div>
       )}
 
-      {(isSupervisor || isTecnico) && (
+      {isTecnico && (
         <div className="space-y-2">
           <Label htmlFor="obs">Observaciones internas</Label>
           <Textarea id="obs" value={observations} onChange={(e) => setObservations(e.target.value)} rows={3} placeholder="Notas internas, diagnóstico, acciones realizadas..." />
@@ -234,7 +373,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
           )}
         </DialogHeader>
 
-        {isEdit ? (
+        {isEdit && isTecnico ? (
           <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList className="grid grid-cols-2 w-full">
               <TabsTrigger value="edit"><Pencil className="h-3.5 w-3.5 mr-1.5" />Detalles</TabsTrigger>
