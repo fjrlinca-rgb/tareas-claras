@@ -102,6 +102,9 @@ const Auth = () => {
               </TabsContent>
 
               <TabsContent value="signup">
+                <div className="mb-4 rounded-md border border-primary/20 bg-primary-soft text-accent-foreground px-3 py-2 text-xs leading-relaxed">
+                  Las cuentas de <strong>técnico</strong> y <strong>supervisor</strong> son administradas internamente.
+                </div>
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email2">Correo</Label>
