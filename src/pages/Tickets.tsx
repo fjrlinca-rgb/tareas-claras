@@ -198,6 +198,7 @@ const TicketsPage = () => {
               tickets={paginated}
               role={role}
               onEdit={openEdit}
+              onAssign={isSupervisor ? openEdit : undefined}
               onDelete={isSupervisor ? handleDelete : undefined}
               onFinalize={isSupervisor || isTecnico ? handleFinalize : undefined}
             />
