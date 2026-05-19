@@ -224,7 +224,7 @@ const TicketsPage = () => {
         onSave={handleSave}
         ticket={editing}
         role={role}
-        technicianOptions={technicians}
+        technicians={registeredTechs}
       />
     </AppLayout>
   );
