@@ -63,10 +63,15 @@ Deno.serve(async (req) => {
 
     // If tecnico, also register into technicians directory
     if (role === "tecnico") {
-      await admin.from("technicians").upsert(
-        { email, name: company ?? email.split("@")[0], active: true, created_by: user.id },
-        { onConflict: "email" },
-      );
+      const { data: existing } = await admin.from("technicians").select("id").eq("email", email).maybeSingle();
+      if (!existing) {
+        await admin.from("technicians").insert({
+          email,
+          name: company ?? email.split("@")[0],
+          active: true,
+          created_by: user.id,
+        });
+      }
     }
 
     return new Response(JSON.stringify({ ok: true, user_id: newId }), {
