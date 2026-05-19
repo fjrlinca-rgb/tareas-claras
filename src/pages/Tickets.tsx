@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TicketsTable } from "@/components/TicketsTable";
 import { TicketDialog, TicketFormValues } from "@/components/TicketDialog";
+import { useTechnicians } from "@/hooks/useTechnicians";
 import { Ticket, PRIORITIES, STATUSES, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/tickets";
 import { toast } from "sonner";
 
