@@ -124,10 +124,20 @@ const UsuariosPage = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: "Total", value: counts.total, icon: UsersIcon, tone: "text-foreground" },
-            { label: "Clientes", value: counts.cliente, icon: UserIcon, tone: "text-muted-foreground" },
-            { label: "Técnicos", value: counts.tecnico, icon: Wrench, tone: "text-primary" },
+            { label: "Clientes", value: counts.cliente, icon: UserIcon, tone: "text-primary" },
+            { label: "Técnicos", value: counts.tecnico, icon: Wrench, tone: "text-status-pendiente" },
             { label: "Supervisores", value: counts.supervisor, icon: ShieldCheck, tone: "text-status-finalizado" },
           ].map((s) => (
+            <Card key={s.label} className="p-4 shadow-card">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                  <p className="text-2xl font-semibold mt-1">{s.value}</p>
+                </div>
+                <s.icon className={`h-5 w-5 ${s.tone}`} />
+              </div>
+            </Card>
+          ))}
             <Card key={s.label} className="p-4 shadow-card">
               <div className="flex items-center justify-between">
                 <div>
