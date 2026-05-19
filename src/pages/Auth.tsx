@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Headset } from "lucide-react";
+import { Headset, ShieldCheck, Lock, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 const Auth = () => {
@@ -25,101 +24,78 @@ const Auth = () => {
     navigate("/");
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: `${window.location.origin}/` },
-    });
-    setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success("Cuenta creada correctamente");
-    navigate("/");
-  };
-
   return (
-    <main className="min-h-screen grid lg:grid-cols-2">
+    <main className="min-h-screen grid lg:grid-cols-2 bg-background">
       {/* Brand panel */}
-      <aside className="hidden lg:flex flex-col justify-between p-10 bg-sidebar text-sidebar-foreground">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-sidebar-primary text-sidebar-primary-foreground grid place-items-center">
+      <aside className="hidden lg:flex flex-col justify-between p-12 bg-sidebar text-sidebar-foreground relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.07] pointer-events-none"
+          style={{ backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+        <div className="relative flex items-center gap-3">
+          <div className="h-11 w-11 rounded-xl bg-sidebar-primary text-sidebar-primary-foreground grid place-items-center shadow-lg">
             <Headset className="h-5 w-5" />
           </div>
           <div>
-            <p className="font-semibold text-base text-white">HelpDesk</p>
+            <p className="font-semibold text-base text-white tracking-tight">HelpDesk</p>
             <p className="text-xs text-sidebar-foreground/60">NetExpert</p>
           </div>
         </div>
-        <div className="space-y-4 max-w-md">
-          <h2 className="text-3xl font-semibold leading-tight text-white">
-            Mesa de ayuda profesional para soporte técnico.
+        <div className="relative space-y-5 max-w-md">
+          <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-sidebar-foreground/70 bg-white/5 border border-white/10 rounded-full px-3 py-1">
+            <ShieldCheck className="h-3.5 w-3.5" /> Plataforma corporativa
+          </div>
+          <h2 className="text-4xl font-semibold leading-tight text-white">
+            Mesa de ayuda empresarial.<br />
+            <span className="text-sidebar-foreground/70">Soporte controlado y trazable.</span>
           </h2>
           <p className="text-sidebar-foreground/70 text-sm leading-relaxed">
-            Centraliza tickets, asigna técnicos, prioriza incidentes críticos y mantén control total
-            sobre el flujo de soporte de tu organización.
+            Acceso restringido al personal autorizado por el supervisor. Las cuentas de empresa, técnicos y
+            supervisores se administran internamente.
           </p>
         </div>
-        <p className="text-xs text-sidebar-foreground/50">© NetExpert · Plataforma empresarial</p>
+        <p className="relative text-xs text-sidebar-foreground/50">© NetExpert · Sistema interno</p>
       </aside>
 
       {/* Form */}
       <section className="flex items-center justify-center p-6 bg-background">
-        <div className="w-full max-w-md animate-fade-in">
+        <div className="w-full max-w-sm animate-fade-in">
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
             <div className="h-10 w-10 rounded-lg bg-primary text-primary-foreground grid place-items-center">
               <Headset className="h-5 w-5" />
             </div>
-            <div>
-              <p className="font-semibold">HelpDesk NetExpert</p>
-            </div>
+            <p className="font-semibold">HelpDesk NetExpert</p>
           </div>
 
-          <Card className="p-6 shadow-soft">
-            <h1 className="text-xl font-semibold mb-1">Acceder al sistema</h1>
-            <p className="text-sm text-muted-foreground mb-6">Ingresa tus credenciales para continuar.</p>
-            <Tabs defaultValue="signin">
-              <TabsList className="grid grid-cols-2 mb-6 w-full">
-                <TabsTrigger value="signin">Iniciar sesión</TabsTrigger>
-                <TabsTrigger value="signup">Crear cuenta</TabsTrigger>
-              </TabsList>
+          <Card className="p-8 shadow-soft border-border/60">
+            <div className="text-center mb-7">
+              <h1 className="text-2xl font-semibold tracking-tight">Acceder al sistema</h1>
+              <p className="text-sm text-muted-foreground mt-1.5">Ingresa tus credenciales para continuar.</p>
+            </div>
 
-              <TabsContent value="signin">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Correo</Label>
-                    <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@empresa.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Contraseña</Label>
-                    <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Entrando..." : "Entrar"}
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="signup">
-                <div className="mb-4 rounded-md border border-primary/20 bg-primary-soft text-accent-foreground px-3 py-2 text-xs leading-relaxed">
-                  Las cuentas de <strong>técnico</strong> y <strong>supervisor</strong> son administradas internamente.
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Correo</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@empresa.com" className="pl-9" />
                 </div>
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email2">Correo</Label>
-                    <Input id="email2" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@empresa.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password2">Contraseña</Label>
-                    <Input id="password2" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Creando..." : "Crear cuenta"}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Contraseña</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="pl-9" />
+                </div>
+              </div>
+              <Button type="submit" className="w-full h-11 mt-2" disabled={loading}>
+                {loading ? "Entrando..." : "Iniciar sesión"}
+              </Button>
+            </form>
+
+            <div className="mt-6 pt-5 border-t border-border/60">
+              <p className="text-xs text-center text-muted-foreground leading-relaxed">
+                El registro público está deshabilitado. Solicita una cuenta a tu <strong className="text-foreground">supervisor</strong>.
+              </p>
+            </div>
           </Card>
         </div>
       </section>
