@@ -1,40 +1,36 @@
-import { LayoutDashboard, Ticket, Headset, Users, BarChart3 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { LayoutDashboard, Ticket, Headset, Users, BarChart3, ShieldCheck, LogOut } from "lucide-react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
+  Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
+  SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole, AppRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-const items = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Tickets", url: "/tickets", icon: Ticket },
-  { title: "Técnicos", url: "/tecnicos", icon: Users },
-  { title: "Reportes", url: "/reportes", icon: BarChart3 },
+type Item = { title: string; url: string; icon: any; roles: AppRole[] };
+
+const ALL_ITEMS: Item[] = [
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["cliente", "tecnico", "supervisor"] },
+  { title: "Tickets", url: "/tickets", icon: Ticket, roles: ["cliente", "tecnico", "supervisor"] },
+  { title: "Técnicos", url: "/tecnicos", icon: Users, roles: ["supervisor"] },
+  { title: "Reportes", url: "/reportes", icon: BarChart3, roles: ["supervisor"] },
+  { title: "Usuarios", url: "/usuarios", icon: ShieldCheck, roles: ["supervisor"] },
 ];
+
+const ROLE_LABEL: Record<AppRole, string> = { cliente: "Cliente", tecnico: "Técnico", supervisor: "Supervisor" };
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
   const { user, signOut } = useAuth();
+  const { primary } = useUserRole();
   const navigate = useNavigate();
 
-  const isActive = (path: string) => path === "/" ? pathname === "/" : pathname.startsWith(path);
-
+  const items = ALL_ITEMS.filter((i) => i.roles.includes(primary));
+  const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
   const handleSignOut = async () => { await signOut(); navigate("/auth"); };
 
   return (
@@ -65,15 +61,12 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={active}>
-                      <NavLink
-                        to={item.url}
-                        className={cn(
-                          "flex items-center gap-3 rounded-md transition-colors",
-                          active
-                            ? "bg-sidebar-primary/15 text-sidebar-primary-foreground border-l-2 border-sidebar-primary"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                        )}
-                      >
+                      <NavLink to={item.url} className={cn(
+                        "flex items-center gap-3 rounded-md transition-colors",
+                        active
+                          ? "bg-sidebar-primary/15 text-sidebar-primary-foreground border-l-2 border-sidebar-primary"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      )}>
                         <item.icon className="h-4 w-4 shrink-0" />
                         {!collapsed && <span className="text-sm font-medium">{item.title}</span>}
                       </NavLink>
@@ -89,24 +82,18 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-3">
         {!collapsed ? (
           <div className="space-y-2">
-            <div className="text-xs text-sidebar-foreground/70 truncate">{user?.email}</div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            >
+            <div className="min-w-0">
+              <div className="text-xs text-sidebar-foreground/70 truncate">{user?.email}</div>
+              <div className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50 mt-0.5">{ROLE_LABEL[primary]}</div>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleSignOut}
+              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
               <LogOut className="h-4 w-4 mr-2" /> Cerrar sesión
             </Button>
           </div>
         ) : (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSignOut}
-            className="text-sidebar-foreground hover:bg-sidebar-accent"
-            aria-label="Cerrar sesión"
-          >
+          <Button variant="ghost" size="icon" onClick={handleSignOut}
+            className="text-sidebar-foreground hover:bg-sidebar-accent" aria-label="Cerrar sesión">
             <LogOut className="h-4 w-4" />
           </Button>
         )}
