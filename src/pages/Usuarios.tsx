@@ -138,16 +138,6 @@ const UsuariosPage = () => {
               </div>
             </Card>
           ))}
-            <Card key={s.label} className="p-4 shadow-card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">{s.label}</p>
-                  <p className="text-2xl font-semibold mt-1">{s.value}</p>
-                </div>
-                <s.icon className={`h-5 w-5 ${s.tone}`} />
-              </div>
-            </Card>
-          ))}
         </div>
 
         <Card className="p-4 shadow-card">
