@@ -1,20 +1,25 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Pencil, Trash2, User2, CheckCircle2 } from "lucide-react";
+import { Pencil, Trash2, User2, CheckCircle2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { Ticket } from "@/lib/tickets";
 import { PriorityBadge, StatusBadge } from "./TicketBadges";
+import { AppRole } from "@/hooks/useUserRole";
 
 interface Props {
   tickets: Ticket[];
   onEdit: (t: Ticket) => void;
-  onDelete: (t: Ticket) => void;
-  onFinalize: (t: Ticket) => void;
+  onDelete?: (t: Ticket) => void;
+  onFinalize?: (t: Ticket) => void;
+  role?: AppRole;
 }
 
-export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize }: Props) => {
+export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, role = "cliente" }: Props) => {
+  const isSupervisor = role === "supervisor";
+  const isTecnico = role === "tecnico";
+
   if (tickets.length === 0) {
     return (
       <Card className="p-12 text-center text-muted-foreground shadow-card">
@@ -32,9 +37,9 @@ export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize }: Props) =
               <TableHead>Título</TableHead>
               <TableHead className="w-[120px]">Prioridad</TableHead>
               <TableHead className="w-[140px]">Estado</TableHead>
-              <TableHead className="w-[180px]">Técnico</TableHead>
+              <TableHead className="w-[200px]">Técnico</TableHead>
               <TableHead className="w-[140px]">Creado</TableHead>
-              <TableHead className="w-[100px] text-right">Acciones</TableHead>
+              <TableHead className="w-[120px] text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -55,7 +60,7 @@ export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize }: Props) =
                   {t.assigned_technician ? (
                     <span className="inline-flex items-center gap-1.5 text-sm">
                       <User2 className="h-3.5 w-3.5 text-muted-foreground" />
-                      {t.assigned_technician}
+                      <span className="truncate max-w-[160px]">{t.assigned_technician}</span>
                     </span>
                   ) : (
                     <span className="text-xs text-muted-foreground italic">Sin asignar</span>
@@ -65,18 +70,23 @@ export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize }: Props) =
                   {format(new Date(t.created_at), "d MMM yyyy", { locale: es })}
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                    {t.status !== "finalizado" && (
+                  <div className="flex justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                    {/* Finalizar: supervisor o técnico asignado */}
+                    {(isSupervisor || isTecnico) && t.status !== "finalizado" && onFinalize && (
                       <Button size="icon" variant="ghost" className="h-8 w-8 text-status-finalizado hover:text-status-finalizado" onClick={() => onFinalize(t)} aria-label="Finalizar">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                       </Button>
                     )}
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onEdit(t)} aria-label="Editar">
-                      <Pencil className="h-3.5 w-3.5" />
+                    {/* Editar / Ver */}
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onEdit(t)} aria-label={isSupervisor || isTecnico ? "Editar" : "Ver"}>
+                      {isSupervisor || isTecnico ? <Pencil className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete(t)} aria-label="Eliminar">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    {/* Eliminar solo supervisor */}
+                    {isSupervisor && onDelete && (
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete(t)} aria-label="Eliminar">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
