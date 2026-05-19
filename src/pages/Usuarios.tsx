@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ShieldCheck, Wrench, User as UserIcon, Search, Users as UsersIcon, AlertTriangle } from "lucide-react";
+import { ShieldCheck, Wrench, Building2, Search, Users as UsersIcon, AlertTriangle, UserPlus, RefreshCw, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole, AppRole } from "@/hooks/useUserRole";
@@ -7,16 +7,20 @@ import { AppLayout } from "@/components/AppLayout";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 interface ProfileRow { id: string; email: string | null; created_at: string; }
 interface UserItem extends ProfileRow { roles: AppRole[]; primary: AppRole; }
 
-const ROLE_LABEL: Record<AppRole, string> = { cliente: "Cliente", tecnico: "Técnico", supervisor: "Supervisor" };
-const ROLE_ICON = { cliente: UserIcon, tecnico: Wrench, supervisor: ShieldCheck } as const;
+// "cliente" rol interno = "empresa" en la UI
+const ROLE_LABEL: Record<AppRole, string> = { cliente: "Empresa", tecnico: "Técnico", supervisor: "Supervisor" };
+const ROLE_ICON = { cliente: Building2, tecnico: Wrench, supervisor: ShieldCheck } as const;
 const ROLE_BADGE: Record<AppRole, string> = {
   cliente: "bg-primary-soft text-primary border border-primary/20",
   tecnico: "bg-status-pendiente-soft text-status-pendiente border border-status-pendiente/20",
@@ -31,6 +35,13 @@ const ROLE_DOT: Record<AppRole, string> = {
 const primaryOf = (roles: AppRole[]): AppRole =>
   roles.includes("supervisor") ? "supervisor" : roles.includes("tecnico") ? "tecnico" : "cliente";
 
+const generatePassword = () => {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let p = "";
+  for (let i = 0; i < 12; i++) p += chars[Math.floor(Math.random() * chars.length)];
+  return p + "!" + Math.floor(Math.random() * 90 + 10);
+};
+
 const UsuariosPage = () => {
   const { user } = useAuth();
   const { isSupervisor, loading: roleLoading } = useUserRole();
@@ -39,6 +50,18 @@ const UsuariosPage = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
   const [updating, setUpdating] = useState<string | null>(null);
+
+  // Create user dialog
+  const [openCreate, setOpenCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newCompany, setNewCompany] = useState("");
+  const [newRole, setNewRole] = useState<AppRole>("cliente");
+  const [newPassword, setNewPassword] = useState(generatePassword());
+
+  const resetCreateForm = () => {
+    setNewEmail(""); setNewCompany(""); setNewRole("cliente"); setNewPassword(generatePassword());
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -69,13 +92,29 @@ const UsuariosPage = () => {
       if (!confirm("Vas a quitarte tu propio rol de supervisor. Perderás acceso al panel. ¿Continuar?")) return;
     }
     setUpdating(u.id);
-    // Replace all roles with the single new role
     const { error: delErr } = await supabase.from("user_roles").delete().eq("user_id", u.id);
     if (delErr) { toast.error(delErr.message); setUpdating(null); return; }
     const { error: insErr } = await supabase.from("user_roles").insert({ user_id: u.id, role: newRole });
     if (insErr) { toast.error(insErr.message); setUpdating(null); return; }
     toast.success(`Rol actualizado a ${ROLE_LABEL[newRole]}`);
     setUpdating(null);
+    await load();
+  };
+
+  const createUser = async () => {
+    if (!newEmail || !newPassword) { toast.error("Email y contraseña son obligatorios"); return; }
+    setCreating(true);
+    const { data, error } = await supabase.functions.invoke("admin-create-user", {
+      body: { email: newEmail, password: newPassword, role: newRole, company: newCompany },
+    });
+    setCreating(false);
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error ?? error?.message ?? "Error al crear usuario");
+      return;
+    }
+    toast.success(`Usuario creado · contraseña temporal: ${newPassword}`);
+    setOpenCreate(false);
+    resetCreateForm();
     await load();
   };
 
@@ -111,20 +150,25 @@ const UsuariosPage = () => {
   return (
     <AppLayout title="Usuarios">
       <div className="space-y-6 animate-fade-in max-w-[1400px]">
-        <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground mb-1">
-            <ShieldCheck className="h-3.5 w-3.5" /> Panel de administración
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground mb-1">
+              <ShieldCheck className="h-3.5 w-3.5" /> Panel de administración
+            </div>
+            <h2 className="text-2xl font-semibold tracking-tight">Gestión de usuarios y roles</h2>
+            <p className="text-muted-foreground text-sm mt-1">
+              Solo el supervisor puede crear cuentas y asignar roles. Los registros públicos están deshabilitados.
+            </p>
           </div>
-          <h2 className="text-2xl font-semibold tracking-tight">Gestión de usuarios y roles</h2>
-          <p className="text-muted-foreground text-sm mt-1">
-            Cambia el rol de cada usuario. Los nuevos registros se crean como <strong>cliente</strong> automáticamente.
-          </p>
+          <Button onClick={() => { resetCreateForm(); setOpenCreate(true); }} className="gap-2">
+            <UserPlus className="h-4 w-4" /> Crear usuario
+          </Button>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: "Total", value: counts.total, icon: UsersIcon, tone: "text-foreground" },
-            { label: "Clientes", value: counts.cliente, icon: UserIcon, tone: "text-primary" },
+            { label: "Empresas", value: counts.cliente, icon: Building2, tone: "text-primary" },
             { label: "Técnicos", value: counts.tecnico, icon: Wrench, tone: "text-status-pendiente" },
             { label: "Supervisores", value: counts.supervisor, icon: ShieldCheck, tone: "text-status-finalizado" },
           ].map((s) => (
@@ -150,7 +194,7 @@ const UsuariosPage = () => {
               <SelectTrigger className="w-full md:w-[200px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los roles</SelectItem>
-                <SelectItem value="cliente">Clientes</SelectItem>
+                <SelectItem value="cliente">Empresas</SelectItem>
                 <SelectItem value="tecnico">Técnicos</SelectItem>
                 <SelectItem value="supervisor">Supervisores</SelectItem>
               </SelectContent>
@@ -200,7 +244,7 @@ const UsuariosPage = () => {
                           <Select value={u.primary} disabled={updating === u.id} onValueChange={(v) => changeRole(u, v as AppRole)}>
                             <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="cliente">Cliente</SelectItem>
+                              <SelectItem value="cliente">Empresa</SelectItem>
                               <SelectItem value="tecnico">Técnico</SelectItem>
                               <SelectItem value="supervisor">Supervisor</SelectItem>
                             </SelectContent>
@@ -215,6 +259,52 @@ const UsuariosPage = () => {
           </Card>
         )}
       </div>
+
+      <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><UserPlus className="h-5 w-5" /> Crear nuevo usuario</DialogTitle>
+            <DialogDescription>
+              Solo el supervisor puede crear cuentas. Comparte la contraseña temporal de forma segura.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="cu-email">Correo</Label>
+              <Input id="cu-email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="usuario@empresa.com" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cu-company">Empresa / Nombre <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <Input id="cu-company" value={newCompany} onChange={(e) => setNewCompany(e.target.value)} placeholder="Ej: Acme S.A." />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Rol</Label>
+              <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cliente">Empresa — crea y ve sus tickets</SelectItem>
+                  <SelectItem value="tecnico">Técnico — gestiona tickets asignados</SelectItem>
+                  <SelectItem value="supervisor">Supervisor — control total</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cu-pass" className="flex items-center gap-1.5"><KeyRound className="h-3.5 w-3.5" /> Contraseña temporal</Label>
+              <div className="flex gap-2">
+                <Input id="cu-pass" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="font-mono" />
+                <Button type="button" variant="outline" size="icon" onClick={() => setNewPassword(generatePassword())} title="Regenerar">
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Pídele al usuario que la cambie tras iniciar sesión.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenCreate(false)} disabled={creating}>Cancelar</Button>
+            <Button onClick={createUser} disabled={creating}>{creating ? "Creando..." : "Crear usuario"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };
