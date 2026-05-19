@@ -9,6 +9,7 @@ export interface Ticket {
   priority: Priority;
   status: Status;
   assigned_technician: string | null;
+  observations?: string | null;
   created_at: string;
   updated_at: string;
 }

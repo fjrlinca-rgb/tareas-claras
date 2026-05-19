@@ -1,22 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRealtimeEntradas } from "@/hooks/useRealtimeEntradas";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/StatCard";
 import { TicketsTable } from "@/components/TicketsTable";
-import { TicketDialog } from "@/components/TicketDialog";
-import { Ticket, Priority, Status } from "@/lib/tickets";
+import { TicketDialog, TicketFormValues } from "@/components/TicketDialog";
+import { Ticket } from "@/lib/tickets";
 import { seedDemoTickets } from "@/lib/seed";
 import { toast } from "sonner";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { primary: role, isSupervisor, isTecnico, isCliente } = useUserRole();
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,15 +51,18 @@ const Dashboard = () => {
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDialogOpen(true); };
 
-  const handleSave = async (values: {
-    title: string; description: string | null; priority: Priority; status: Status; assigned_technician: string | null;
-  }) => {
+  const handleSave = async (values: TicketFormValues) => {
     if (editing) {
-      const { error } = await supabase.from("entradas").update(values).eq("id", editing.id);
+      const payload: any = { ...values };
+      if (isCliente) { delete payload.status; delete payload.assigned_technician; delete payload.observations; }
+      const { error } = await supabase.from("entradas").update(payload).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
       toast.success("Ticket actualizado");
     } else {
-      const { error } = await supabase.from("entradas").insert({ ...values, user_id: user!.id });
+      const payload: any = isCliente
+        ? { title: values.title, description: values.description, priority: values.priority, status: "pendiente", user_id: user!.id }
+        : { ...values, user_id: user!.id };
+      const { error } = await supabase.from("entradas").insert(payload);
       if (error) { toast.error(error.message); return; }
       toast.success("Ticket creado");
     }
@@ -142,11 +147,17 @@ const Dashboard = () => {
             </div>
           </Card>
         ) : (
-          <TicketsTable tickets={recent} onEdit={openEdit} onDelete={handleDelete} onFinalize={handleFinalize} />
+          <TicketsTable
+            tickets={recent}
+            role={role}
+            onEdit={openEdit}
+            onDelete={isSupervisor ? handleDelete : undefined}
+            onFinalize={isSupervisor || isTecnico ? handleFinalize : undefined}
+          />
         )}
       </div>
 
-      <TicketDialog open={dialogOpen} onOpenChange={setDialogOpen} onSave={handleSave} ticket={editing} />
+      <TicketDialog open={dialogOpen} onOpenChange={setDialogOpen} onSave={handleSave} ticket={editing} role={role} />
     </AppLayout>
   );
 };
