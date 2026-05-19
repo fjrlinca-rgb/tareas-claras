@@ -9,6 +9,7 @@ import Auth from "./pages/Auth.tsx";
 import Tickets from "./pages/Tickets.tsx";
 import Tecnicos from "./pages/Tecnicos.tsx";
 import Reportes from "./pages/Reportes.tsx";
+import Usuarios from "./pages/Usuarios.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/tickets" element={<Tickets />} />
             <Route path="/tecnicos" element={<Tecnicos />} />
             <Route path="/reportes" element={<Reportes />} />
+            <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

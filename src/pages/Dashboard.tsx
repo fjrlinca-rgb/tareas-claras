@@ -112,9 +112,11 @@ const Dashboard = () => {
                 <Sparkles className="h-4 w-4 mr-1" /> {seeding ? "Cargando..." : "Cargar datos demo"}
               </Button>
             )}
-            <Button onClick={openNew} size="lg" className="shadow-soft">
-              <Plus className="h-4 w-4 mr-1" /> Crear ticket
-            </Button>
+            {(isCliente || isSupervisor) && (
+              <Button onClick={openNew} size="lg" className="shadow-soft">
+                <Plus className="h-4 w-4 mr-1" /> Crear ticket
+              </Button>
+            )}
           </div>
         </div>
 
