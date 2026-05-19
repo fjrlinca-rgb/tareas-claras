@@ -126,10 +126,6 @@ function UserDialog({
         </DialogHeader>
         <div className="space-y-3 py-1 max-h-[60vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5 col-span-2">
-              <Label>Nombre completo</Label>
-              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Ej: María López" />
-            </div>
             <div className="space-y-1.5">
               <Label>Correo</Label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="usuario@empresa.com" />
@@ -153,7 +149,7 @@ function UserDialog({
               <Label>Confirmar contraseña</Label>
               <Input value={confirm} onChange={(e) => setConfirm(e.target.value)} className="font-mono" placeholder={isEdit ? "(dejar vacío)" : ""} />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 col-span-2">
               <Label>Rol</Label>
               <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -161,16 +157,6 @@ function UserDialog({
                   <SelectItem value="cliente">Empresa</SelectItem>
                   <SelectItem value="tecnico">Técnico</SelectItem>
                   <SelectItem value="supervisor">Supervisor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Empresa asignada</Label>
-              <Select value={companyId} onValueChange={setCompanyId}>
-                <SelectTrigger><SelectValue placeholder="Sin asignar" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sin asignar</SelectItem>
-                  {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
