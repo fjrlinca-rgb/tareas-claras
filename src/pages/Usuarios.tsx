@@ -17,6 +17,16 @@ interface UserItem extends ProfileRow { roles: AppRole[]; primary: AppRole; }
 
 const ROLE_LABEL: Record<AppRole, string> = { cliente: "Cliente", tecnico: "Técnico", supervisor: "Supervisor" };
 const ROLE_ICON = { cliente: UserIcon, tecnico: Wrench, supervisor: ShieldCheck } as const;
+const ROLE_BADGE: Record<AppRole, string> = {
+  cliente: "bg-primary-soft text-primary border border-primary/20",
+  tecnico: "bg-status-pendiente-soft text-status-pendiente border border-status-pendiente/20",
+  supervisor: "bg-status-finalizado-soft text-status-finalizado border border-status-finalizado/20",
+};
+const ROLE_DOT: Record<AppRole, string> = {
+  cliente: "bg-primary",
+  tecnico: "bg-status-pendiente",
+  supervisor: "bg-status-finalizado",
+};
 
 const primaryOf = (roles: AppRole[]): AppRole =>
   roles.includes("supervisor") ? "supervisor" : roles.includes("tecnico") ? "tecnico" : "cliente";
@@ -114,8 +124,8 @@ const UsuariosPage = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: "Total", value: counts.total, icon: UsersIcon, tone: "text-foreground" },
-            { label: "Clientes", value: counts.cliente, icon: UserIcon, tone: "text-muted-foreground" },
-            { label: "Técnicos", value: counts.tecnico, icon: Wrench, tone: "text-primary" },
+            { label: "Clientes", value: counts.cliente, icon: UserIcon, tone: "text-primary" },
+            { label: "Técnicos", value: counts.tecnico, icon: Wrench, tone: "text-status-pendiente" },
             { label: "Supervisores", value: counts.supervisor, icon: ShieldCheck, tone: "text-status-finalizado" },
           ].map((s) => (
             <Card key={s.label} className="p-4 shadow-card">
@@ -171,8 +181,8 @@ const UsuariosPage = () => {
                       <TableRow key={u.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-muted grid place-items-center shrink-0">
-                              <UserIcon className="h-4 w-4 text-muted-foreground" />
+                            <div className={`h-9 w-9 rounded-full grid place-items-center shrink-0 ${ROLE_BADGE[u.primary]}`}>
+                              <Icon className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
                               <p className="font-medium truncate">{u.email ?? "(sin email)"}</p>
@@ -181,8 +191,9 @@ const UsuariosPage = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-muted">
-                            <Icon className="h-3 w-3" /> {ROLE_LABEL[u.primary]}
+                          <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${ROLE_BADGE[u.primary]}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${ROLE_DOT[u.primary]}`} />
+                            {ROLE_LABEL[u.primary]}
                           </span>
                         </TableCell>
                         <TableCell>
