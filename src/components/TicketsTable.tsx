@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Pencil, Trash2, User2, CheckCircle2, Eye } from "lucide-react";
+import { Pencil, Trash2, User2, CheckCircle2, Eye, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
@@ -13,10 +13,11 @@ interface Props {
   onEdit: (t: Ticket) => void;
   onDelete?: (t: Ticket) => void;
   onFinalize?: (t: Ticket) => void;
+  onAssign?: (t: Ticket) => void;
   role?: AppRole;
 }
 
-export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, role = "cliente" }: Props) => {
+export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, onAssign, role = "cliente" }: Props) => {
   const isSupervisor = role === "supervisor";
   const isTecnico = role === "tecnico";
 
@@ -62,6 +63,10 @@ export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, role = "cl
                       <User2 className="h-3.5 w-3.5 text-muted-foreground" />
                       <span className="truncate max-w-[160px]">{t.assigned_technician}</span>
                     </span>
+                  ) : isSupervisor && onAssign ? (
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAssign(t)}>
+                      <UserPlus className="h-3 w-3 mr-1" /> Asignar técnico
+                    </Button>
                   ) : (
                     <span className="text-xs text-muted-foreground italic">Sin asignar</span>
                   )}
@@ -71,17 +76,14 @@ export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, role = "cl
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                    {/* Finalizar: supervisor o técnico asignado */}
                     {(isSupervisor || isTecnico) && t.status !== "finalizado" && onFinalize && (
                       <Button size="icon" variant="ghost" className="h-8 w-8 text-status-finalizado hover:text-status-finalizado" onClick={() => onFinalize(t)} aria-label="Finalizar">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                       </Button>
                     )}
-                    {/* Editar / Ver */}
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onEdit(t)} aria-label={isSupervisor || isTecnico ? "Editar" : "Ver"}>
                       {isSupervisor || isTecnico ? <Pencil className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                     </Button>
-                    {/* Eliminar solo supervisor */}
                     {isSupervisor && onDelete && (
                       <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete(t)} aria-label="Eliminar">
                         <Trash2 className="h-3.5 w-3.5" />

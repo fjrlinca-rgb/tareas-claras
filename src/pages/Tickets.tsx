@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TicketsTable } from "@/components/TicketsTable";
 import { TicketDialog, TicketFormValues } from "@/components/TicketDialog";
+import { useTechnicians } from "@/hooks/useTechnicians";
 import { Ticket, PRIORITIES, STATUSES, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/tickets";
 import { toast } from "sonner";
 
@@ -43,11 +44,14 @@ const TicketsPage = () => {
   useEffect(() => { load(); }, [load]);
   useRealtimeEntradas(load);
 
+  const { technicians: registeredTechs } = useTechnicians(isSupervisor);
+
   const technicians = useMemo(() => {
     const s = new Set<string>();
     tickets.forEach((t) => { if (t.assigned_technician) s.add(t.assigned_technician); });
+    registeredTechs.forEach((t) => s.add(t.email));
     return Array.from(s).sort();
-  }, [tickets]);
+  }, [tickets, registeredTechs]);
 
   const filtered = useMemo(() => {
     return tickets.filter((t) => {
@@ -194,6 +198,7 @@ const TicketsPage = () => {
               tickets={paginated}
               role={role}
               onEdit={openEdit}
+              onAssign={isSupervisor ? openEdit : undefined}
               onDelete={isSupervisor ? handleDelete : undefined}
               onFinalize={isSupervisor || isTecnico ? handleFinalize : undefined}
             />
@@ -219,7 +224,7 @@ const TicketsPage = () => {
         onSave={handleSave}
         ticket={editing}
         role={role}
-        technicianOptions={technicians}
+        technicians={registeredTechs}
       />
     </AppLayout>
   );
