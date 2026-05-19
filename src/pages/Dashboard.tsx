@@ -112,7 +112,7 @@ const Dashboard = () => {
                 <Sparkles className="h-4 w-4 mr-1" /> {seeding ? "Cargando..." : "Cargar datos demo"}
               </Button>
             )}
-            {(isCliente || isSupervisor) && (
+            {isCliente && (
               <Button onClick={openNew} size="lg" className="shadow-soft">
                 <Plus className="h-4 w-4 mr-1" /> Crear ticket
               </Button>
@@ -143,9 +143,11 @@ const Dashboard = () => {
               <Button onClick={handleSeed} variant="outline" disabled={seeding}>
                 <Sparkles className="h-4 w-4 mr-1" /> Cargar datos demo
               </Button>
-              <Button onClick={openNew}>
-                <Plus className="h-4 w-4 mr-1" /> Crear primer ticket
-              </Button>
+              {isCliente && (
+                <Button onClick={openNew}>
+                  <Plus className="h-4 w-4 mr-1" /> Crear primer ticket
+                </Button>
+              )}
             </div>
           </Card>
         ) : (
