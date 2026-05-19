@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      companies: {
+        Row: {
+          active: boolean
+          contact: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          contact?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          contact?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       entradas: {
         Row: {
           assigned_technician: string | null
@@ -55,21 +88,41 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active: boolean
+          company_id: string | null
           created_at: string
           email: string | null
+          full_name: string | null
           id: string
+          username: string | null
         }
         Insert: {
+          active?: boolean
+          company_id?: string | null
           created_at?: string
           email?: string | null
+          full_name?: string | null
           id: string
+          username?: string | null
         }
         Update: {
+          active?: boolean
+          company_id?: string | null
           created_at?: string
           email?: string | null
+          full_name?: string | null
           id?: string
+          username?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       technicians: {
         Row: {
