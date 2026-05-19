@@ -171,12 +171,17 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
           <Select value={technician} onValueChange={setTechnician}>
             <SelectTrigger id="tech"><SelectValue placeholder="Selecciona un técnico" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value={UNASSIGNED}>Sin asignar</SelectItem>
-              {technicians.map((t) => <SelectItem key={t.id} value={t.email}>{t.email}</SelectItem>)}
+              <SelectItem value={UNASSIGNED}>Sin asignar (temporal)</SelectItem>
+              {technicians.map((t) => (
+                <SelectItem key={t.id} value={t.email}>
+                  {t.name ? `${t.name} · ${t.email}` : t.email}
+                  {t.specialty ? ` — ${t.specialty}` : ""}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {technicians.length === 0 && (
-            <p className="text-xs text-muted-foreground">No hay técnicos registrados. Asigna el rol "técnico" desde Usuarios.</p>
+            <p className="text-xs text-muted-foreground">No hay técnicos activos. Agrega uno desde el módulo Técnicos.</p>
           )}
         </div>
       )}
