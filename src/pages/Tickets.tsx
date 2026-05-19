@@ -44,11 +44,14 @@ const TicketsPage = () => {
   useEffect(() => { load(); }, [load]);
   useRealtimeEntradas(load);
 
+  const { technicians: registeredTechs } = useTechnicians(isSupervisor);
+
   const technicians = useMemo(() => {
     const s = new Set<string>();
     tickets.forEach((t) => { if (t.assigned_technician) s.add(t.assigned_technician); });
+    registeredTechs.forEach((t) => s.add(t.email));
     return Array.from(s).sort();
-  }, [tickets]);
+  }, [tickets, registeredTechs]);
 
   const filtered = useMemo(() => {
     return tickets.filter((t) => {
