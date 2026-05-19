@@ -17,7 +17,7 @@ interface Props {
   role?: AppRole;
 }
 
-export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, role = "cliente" }: Props) => {
+export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, onAssign, role = "cliente" }: Props) => {
   const isSupervisor = role === "supervisor";
   const isTecnico = role === "tecnico";
 
