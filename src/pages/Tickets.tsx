@@ -81,11 +81,14 @@ const TicketsPage = () => {
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDialogOpen(true); };
 
+  // Solo es "cliente puro" si NO es supervisor ni técnico (los supervisores
+  // suelen tener también el rol auto-asignado `cliente`).
+  const isOnlyCliente = !isSupervisor && !isTecnico;
+
   const handleSave = async (values: TicketFormValues) => {
     if (editing) {
       const payload: any = { ...values };
-      // Cliente nunca debería editar (no le mostramos botón), pero por seguridad bloqueamos cambios sensibles
-      if (isCliente) {
+      if (isOnlyCliente) {
         delete payload.status;
         delete payload.assigned_technician;
         delete payload.observations;
@@ -95,7 +98,7 @@ const TicketsPage = () => {
       toast.success("Ticket actualizado");
     } else {
       // Crear: cliente fuerza pendiente y sin técnico
-      const payload: any = isCliente
+      const payload: any = isOnlyCliente
         ? {
             title: values.title,
             description: values.description,
