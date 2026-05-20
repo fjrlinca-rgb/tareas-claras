@@ -42,10 +42,7 @@ export function useTechnicianNames() {
       setMap(new Map());
     } finally {
       loadingRef.current = false;
-      if (pendingRef.current) {
-        pendingRef.current = false;
-        void load();
-      }
+      pendingRef.current = false;
     }
   }, []);
 
