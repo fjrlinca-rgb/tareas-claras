@@ -11,7 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useReportesDiarios, RangoFiltro } from "@/hooks/useReportesDiarios";
 import { exportarExcel, exportarPDF } from "@/lib/reportesExport";
-import { Ticket, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/tickets";
+import { Ticket, PRIORITY_LABEL, STATUS_LABEL, formatDuracion } from "@/lib/tickets";
+import { Cronometro } from "@/components/Cronometro";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area,
 } from "recharts";
