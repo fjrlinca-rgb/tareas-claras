@@ -10,6 +10,7 @@ import { Priority, Status, Ticket, PRIORITY_LABEL, STATUS_LABEL, PRIORITIES, STA
 import { AppRole } from "@/hooks/useUserRole";
 import { ShieldCheck, Wrench, User, History, Pencil, Building2, Calendar, AlertCircle, FileText } from "lucide-react";
 import { Technician } from "@/hooks/useTechnicians";
+import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { TicketHistory } from "./TicketHistory";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
