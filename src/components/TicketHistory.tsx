@@ -4,6 +4,7 @@ import { es } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, ArrowRight, Plus, User2, FileText, AlertCircle, Activity } from "lucide-react";
 import { PRIORITY_LABEL, STATUS_LABEL } from "@/lib/tickets";
+import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface HistoryRow {
