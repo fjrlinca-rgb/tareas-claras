@@ -44,9 +44,11 @@ export function useTechnicianNames() {
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    const ch = supabase
-      .channel("tech-names-rt")
-      .on("postgres_changes", { event: "*", schema: "public", table: "user_roles" }, () => load())
+    // Nombre único por montaje para evitar conflictos cuando el hook
+    // se usa en varias páginas/componentes a la vez.
+    const channelName = `tech-names-rt-${Math.random().toString(36).slice(2)}`;
+    const ch = supabase.channel(channelName);
+    ch.on("postgres_changes", { event: "*", schema: "public", table: "user_roles" }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "technicians" }, () => load())
       .subscribe();
