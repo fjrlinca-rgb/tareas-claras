@@ -83,6 +83,14 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
     }
   }, [open, isTecnico, ticket?.id]);
 
+  // Supervisor: al abrir un ticket no revisado, marcar como visto.
+  useEffect(() => {
+    if (!open || !isSupervisor || !ticket?.id) return;
+    if ((ticket as any).visto_por_supervisor === false) {
+      supabase.from("entradas").update({ visto_por_supervisor: true }).eq("id", ticket.id).then(() => {});
+    }
+  }, [open, isSupervisor, ticket?.id]);
+
   // Cargar empresa / correo del solicitante (solo supervisor en edición)
   useEffect(() => {
     if (!open || !isSupervisor || !ticket?.user_id) return;
