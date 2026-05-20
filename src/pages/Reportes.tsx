@@ -237,17 +237,18 @@ const Reportes = () => {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)}
+          <div className="grid grid-cols-2 lg:grid-cols-7 gap-3">
+            {Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
             <KPI label="Tickets totales" value={kpis.total} icon={Inbox} tone="primary" />
             <KPI label="Pendientes" value={kpis.pend} icon={Clock} tone="warning" />
             <KPI label="En revisión" value={kpis.rev} icon={Eye} tone="review" />
             <KPI label="Finalizados" value={kpis.fin} icon={CheckCircle2} tone="success" />
             <KPI label="Críticos" value={kpis.crit} icon={AlertTriangle} tone="destructive" />
             <KPI label="Técnicos activos" value={kpis.tecActivos} icon={Users} tone="muted" />
+            <KPI label="Tiempo prom." value={kpis.promedio} icon={Timer} tone="primary" />
           </div>
         )}
 
