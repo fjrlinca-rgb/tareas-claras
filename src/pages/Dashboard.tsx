@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRealtimeEntradas } from "@/hooks/useRealtimeEntradas";
 import { useNavigate } from "react-router-dom";
-import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight, Eye } from "lucide-react";
+import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight, Eye, Timer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
