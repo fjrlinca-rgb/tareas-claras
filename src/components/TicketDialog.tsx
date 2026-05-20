@@ -236,11 +236,11 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={UNASSIGNED}>Sin asignar (temporal)</SelectItem>
-                    {technicians.map((t) => {
-                      const label = t.name || t.email;
-                      const count = t.ticketCount ?? 0;
+                    {Array.isArray(technicians) && technicians.map((t) => {
+                      const label = t?.name || t?.email || "—";
+                      const count = t?.ticketCount ?? 0;
                       return (
-                        <SelectItem key={t.id} value={t.email} className="py-2">
+                        <SelectItem key={t.id ?? t.email} value={t.email} textValue={`${label} ${t.email}`} className="py-2">
                           <div className="flex flex-col leading-tight">
                             <span className="font-medium text-sm">{label}</span>
                             <span className="text-[11px] text-muted-foreground">{t.email}</span>
@@ -253,7 +253,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
                     })}
                   </SelectContent>
                 </Select>
-                {technicians.length === 0 && (
+                {(!Array.isArray(technicians) || technicians.length === 0) && (
                   <p className="text-xs text-muted-foreground">
                     No hay usuarios con rol <strong>técnico</strong>. Crea o promueve uno desde <strong>Usuarios</strong>.
                   </p>
