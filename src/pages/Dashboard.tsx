@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRealtimeEntradas } from "@/hooks/useRealtimeEntradas";
 import { useNavigate } from "react-router-dom";
-import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight } from "lucide-react";
+import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -44,6 +44,7 @@ const Dashboard = () => {
   const stats = useMemo(() => ({
     pendiente: tickets.filter((t) => t.status === "pendiente").length,
     en_proceso: tickets.filter((t) => t.status === "en_proceso").length,
+    en_revision: tickets.filter((t) => t.status === "en_revision").length,
     finalizado: tickets.filter((t) => t.status === "finalizado").length,
     critica: tickets.filter((t) => t.priority === "critica" && t.status !== "finalizado").length,
   }), [tickets]);
@@ -122,9 +123,10 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard label="Pendientes" value={stats.pendiente} icon={Clock} tone="warning" />
           <StatCard label="En proceso" value={stats.en_proceso} icon={Loader2} tone="primary" />
+          <StatCard label="En revisión" value={stats.en_revision} icon={Eye} tone="primary" />
           <StatCard label="Finalizados" value={stats.finalizado} icon={CheckCircle2} tone="success" />
           <StatCard label="Críticos activos" value={stats.critica} icon={AlertOctagon} tone="destructive" />
         </div>
