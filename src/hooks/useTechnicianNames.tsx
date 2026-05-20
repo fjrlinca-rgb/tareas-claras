@@ -3,11 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Devuelve un mapa { emailLower -> nombre amigable } para todos los
- * usuarios con rol `tecnico`. Se usa para mostrar el nombre del técnico
- * en lugar del correo en tablas, dashboards, historial, etc.
- *
- * La asignación interna sigue siendo el correo (campo
- * `entradas.assigned_technician`); este hook es solo para presentación.
+ * usuarios con rol `tecnico`. Fuente ÚNICA: user_roles + profiles.
+ * No usa la tabla legacy `technicians`.
  */
 export function useTechnicianNames() {
   const [map, setMap] = useState<Map<string, string>>(new Map());
@@ -19,24 +16,18 @@ export function useTechnicianNames() {
       .eq("role", "tecnico");
     const userIds = Array.from(new Set((roleRows ?? []).map((r: any) => r.user_id)));
 
-    const [profsRes, dirRes] = await Promise.all([
-      userIds.length
-        ? supabase.from("profiles").select("email,full_name,username").in("id", userIds)
-        : Promise.resolve({ data: [] as any[] }),
-      supabase.from("technicians").select("email,name"),
-    ]);
+    if (userIds.length === 0) { setMap(new Map()); return; }
+
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("email,full_name,username")
+      .in("id", userIds);
 
     const m = new Map<string, string>();
-    (profsRes.data ?? []).forEach((p: any) => {
+    (profs ?? []).forEach((p: any) => {
       if (!p?.email) return;
-      const key = p.email.toLowerCase();
       const name = p.full_name || p.username;
-      if (name) m.set(key, name);
-    });
-    // El directorio `technicians` puede tener un nombre más cuidado
-    (dirRes.data ?? []).forEach((d: any) => {
-      if (!d?.email || !d?.name) return;
-      m.set(d.email.toLowerCase(), d.name);
+      if (name) m.set(p.email.toLowerCase(), name);
     });
     setMap(m);
   }, []);
@@ -44,13 +35,11 @@ export function useTechnicianNames() {
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    // Nombre único por montaje para evitar conflictos cuando el hook
-    // se usa en varias páginas/componentes a la vez.
     const channelName = `tech-names-rt-${Math.random().toString(36).slice(2)}`;
-    const ch = supabase.channel(channelName);
-    ch.on("postgres_changes", { event: "*", schema: "public", table: "user_roles" }, () => load())
+    const ch = supabase
+      .channel(channelName)
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_roles" }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "technicians" }, () => load())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [load]);

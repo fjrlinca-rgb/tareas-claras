@@ -231,15 +231,26 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
               <div className="space-y-2">
                 <Label htmlFor="tech">Técnico asignado</Label>
                 <Select value={technician} onValueChange={setTechnician}>
-                  <SelectTrigger id="tech"><SelectValue placeholder="Selecciona un técnico" /></SelectTrigger>
+                  <SelectTrigger id="tech" className="h-auto min-h-10 py-2">
+                    <SelectValue placeholder="Selecciona un técnico" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={UNASSIGNED}>Sin asignar (temporal)</SelectItem>
-                    {technicians.map((t) => (
-                      <SelectItem key={t.id} value={t.email}>
-                        {(t.name || t.email)} · {t.email}
-                        {typeof t.ticketCount === "number" ? ` — ${t.ticketCount} abiertos` : ""}
-                      </SelectItem>
-                    ))}
+                    {technicians.map((t) => {
+                      const label = t.name || t.email;
+                      const count = t.ticketCount ?? 0;
+                      return (
+                        <SelectItem key={t.id} value={t.email} className="py-2">
+                          <div className="flex flex-col leading-tight">
+                            <span className="font-medium text-sm">{label}</span>
+                            <span className="text-[11px] text-muted-foreground">{t.email}</span>
+                            <span className="text-[11px] text-primary mt-0.5">
+                              {count} {count === 1 ? "ticket activo" : "tickets activos"}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 {technicians.length === 0 && (
