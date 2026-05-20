@@ -41,13 +41,21 @@ const Dashboard = () => {
   useEffect(() => { load(); }, [load]);
   useRealtimeEntradas(load);
 
-  const stats = useMemo(() => ({
-    pendiente: tickets.filter((t) => t.status === "pendiente").length,
-    en_proceso: tickets.filter((t) => t.status === "en_proceso").length,
-    en_revision: tickets.filter((t) => t.status === "en_revision").length,
-    finalizado: tickets.filter((t) => t.status === "finalizado").length,
-    critica: tickets.filter((t) => t.priority === "critica" && t.status !== "finalizado").length,
-  }), [tickets]);
+  const stats = useMemo(() => {
+    const finalizados = tickets.filter((t) => t.status === "finalizado");
+    const tiempos = finalizados
+      .map((t) => t.tiempo_resolucion_segundos ?? 0)
+      .filter((s) => s > 0);
+    const promedioSeg = tiempos.length ? Math.round(tiempos.reduce((a, b) => a + b, 0) / tiempos.length) : 0;
+    return {
+      pendiente: tickets.filter((t) => t.status === "pendiente").length,
+      en_proceso: tickets.filter((t) => t.status === "en_proceso").length,
+      en_revision: tickets.filter((t) => t.status === "en_revision").length,
+      finalizado: finalizados.length,
+      critica: tickets.filter((t) => t.priority === "critica" && t.status !== "finalizado").length,
+      tiempoPromedio: tiempos.length ? formatDuracion(promedioSeg) : "—",
+    };
+  }, [tickets]);
 
   const recent = useMemo(() => tickets.slice(0, 6), [tickets]);
 
