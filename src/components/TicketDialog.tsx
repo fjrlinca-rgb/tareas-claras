@@ -48,6 +48,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
   const isSupervisor = role === "supervisor";
   const isTecnico = role === "tecnico";
   const isCliente = role === "cliente";
+  const { getName: getTechnicianName } = useTechnicianNames();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
