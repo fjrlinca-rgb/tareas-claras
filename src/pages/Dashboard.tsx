@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/StatCard";
 import { TicketsTable } from "@/components/TicketsTable";
 import { TicketDialog, TicketFormValues } from "@/components/TicketDialog";
-import { Ticket } from "@/lib/tickets";
+import { Ticket, formatDuracion } from "@/lib/tickets";
 import { seedDemoTickets } from "@/lib/seed";
 import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { toast } from "sonner";
