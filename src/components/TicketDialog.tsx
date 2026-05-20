@@ -12,6 +12,7 @@ import { ShieldCheck, Wrench, User, History, Pencil, Building2, Calendar, AlertC
 import { Technician } from "@/hooks/useTechnicians";
 import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { TicketHistory } from "./TicketHistory";
+import { Cronometro } from "./Cronometro";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -223,6 +224,32 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
                 <p className="text-sm text-foreground/90 whitespace-pre-wrap">{ticket!.description}</p>
               </div>
             )}
+
+            {/* Cronómetro de atención */}
+            <div className="pt-2 border-t border-border/60 grid grid-cols-3 gap-3 text-xs">
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Inicio revisión</p>
+                <p className="font-medium mt-0.5">
+                  {(ticket as any).fecha_inicio_revision
+                    ? format(new Date((ticket as any).fecha_inicio_revision), "d MMM HH:mm", { locale: es })
+                    : <span className="text-muted-foreground">—</span>}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Finalizado</p>
+                <p className="font-medium mt-0.5">
+                  {(ticket as any).fecha_finalizacion
+                    ? format(new Date((ticket as any).fecha_finalizacion), "d MMM HH:mm", { locale: es })
+                    : <span className="text-muted-foreground">—</span>}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Tiempo total</p>
+                <div className="mt-0.5">
+                  <Cronometro ticket={ticket as any} liveSuffix={ticket!.status === "en_revision" ? "en revisión" : ticket!.status === "en_proceso" ? "en proceso" : undefined} />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Formulario compacto */}
@@ -375,6 +402,30 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
               </div>
             );
           })()}
+        </div>
+      )}
+
+      {(isTecnico || (isCliente && isEdit)) && ticket && (
+        <div className="rounded-md border border-border bg-muted/30 px-3 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+          <div>
+            <span className="text-muted-foreground">Inicio revisión: </span>
+            <span className="font-medium">
+              {(ticket as any).fecha_inicio_revision
+                ? format(new Date((ticket as any).fecha_inicio_revision), "d MMM HH:mm", { locale: es })
+                : "—"}
+            </span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Finalizado: </span>
+            <span className="font-medium">
+              {(ticket as any).fecha_finalizacion
+                ? format(new Date((ticket as any).fecha_finalizacion), "d MMM HH:mm", { locale: es })
+                : "—"}
+            </span>
+          </div>
+          <div className="ml-auto">
+            <Cronometro ticket={ticket as any} liveSuffix={ticket.status === "en_revision" ? "en revisión" : ticket.status === "en_proceso" ? "en proceso" : undefined} />
+          </div>
         </div>
       )}
 

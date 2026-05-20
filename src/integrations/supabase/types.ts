@@ -52,10 +52,14 @@ export type Database = {
           assigned_technician: string | null
           created_at: string
           description: string | null
+          fecha_finalizacion: string | null
+          fecha_inicio_revision: string | null
           id: string
           observations: string | null
           priority: string
           status: string
+          tiempo_resolucion_segundos: number | null
+          tiempo_resolucion_texto: string | null
           title: string
           updated_at: string
           user_id: string
@@ -66,10 +70,14 @@ export type Database = {
           assigned_technician?: string | null
           created_at?: string
           description?: string | null
+          fecha_finalizacion?: string | null
+          fecha_inicio_revision?: string | null
           id?: string
           observations?: string | null
           priority?: string
           status?: string
+          tiempo_resolucion_segundos?: number | null
+          tiempo_resolucion_texto?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -80,10 +88,14 @@ export type Database = {
           assigned_technician?: string | null
           created_at?: string
           description?: string | null
+          fecha_finalizacion?: string | null
+          fecha_inicio_revision?: string | null
           id?: string
           observations?: string | null
           priority?: string
           status?: string
+          tiempo_resolucion_segundos?: number | null
+          tiempo_resolucion_texto?: string | null
           title?: string
           updated_at?: string
           user_id?: string
@@ -305,6 +317,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      format_duracion: { Args: { segundos: number }; Returns: string }
       generar_snapshot_diario: {
         Args: { fecha_objetivo?: string }
         Returns: {

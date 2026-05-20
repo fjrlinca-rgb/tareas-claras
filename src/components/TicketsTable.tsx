@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card } from "@/components/ui/card";
 import { Ticket } from "@/lib/tickets";
 import { PriorityBadge, StatusBadge } from "./TicketBadges";
+import { Cronometro } from "./Cronometro";
 import { AppRole } from "@/hooks/useUserRole";
 
 interface Props {
@@ -41,6 +42,7 @@ export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, onAssign, 
               <TableHead className="w-[140px]">Estado</TableHead>
               <TableHead className="w-[200px]">Técnico</TableHead>
               <TableHead className="w-[140px]">Creado</TableHead>
+              <TableHead className="w-[150px]">Tiempo resolución</TableHead>
               <TableHead className="w-[120px] text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -86,6 +88,9 @@ export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, onAssign, 
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {format(new Date(t.created_at), "d MMM yyyy", { locale: es })}
+                </TableCell>
+                <TableCell>
+                  <Cronometro ticket={t} compact liveSuffix={t.status === "en_revision" ? "en revisión" : t.status === "en_proceso" ? "en proceso" : undefined} />
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRealtimeEntradas } from "@/hooks/useRealtimeEntradas";
 import { useNavigate } from "react-router-dom";
-import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight, Eye } from "lucide-react";
+import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight, Eye, Timer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/StatCard";
 import { TicketsTable } from "@/components/TicketsTable";
 import { TicketDialog, TicketFormValues } from "@/components/TicketDialog";
-import { Ticket } from "@/lib/tickets";
+import { Ticket, formatDuracion } from "@/lib/tickets";
 import { seedDemoTickets } from "@/lib/seed";
 import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { toast } from "sonner";
@@ -41,13 +41,21 @@ const Dashboard = () => {
   useEffect(() => { load(); }, [load]);
   useRealtimeEntradas(load);
 
-  const stats = useMemo(() => ({
-    pendiente: tickets.filter((t) => t.status === "pendiente").length,
-    en_proceso: tickets.filter((t) => t.status === "en_proceso").length,
-    en_revision: tickets.filter((t) => t.status === "en_revision").length,
-    finalizado: tickets.filter((t) => t.status === "finalizado").length,
-    critica: tickets.filter((t) => t.priority === "critica" && t.status !== "finalizado").length,
-  }), [tickets]);
+  const stats = useMemo(() => {
+    const finalizados = tickets.filter((t) => t.status === "finalizado");
+    const tiempos = finalizados
+      .map((t) => t.tiempo_resolucion_segundos ?? 0)
+      .filter((s) => s > 0);
+    const promedioSeg = tiempos.length ? Math.round(tiempos.reduce((a, b) => a + b, 0) / tiempos.length) : 0;
+    return {
+      pendiente: tickets.filter((t) => t.status === "pendiente").length,
+      en_proceso: tickets.filter((t) => t.status === "en_proceso").length,
+      en_revision: tickets.filter((t) => t.status === "en_revision").length,
+      finalizado: finalizados.length,
+      critica: tickets.filter((t) => t.priority === "critica" && t.status !== "finalizado").length,
+      tiempoPromedio: tiempos.length ? formatDuracion(promedioSeg) : "—",
+    };
+  }, [tickets]);
 
   const recent = useMemo(() => tickets.slice(0, 6), [tickets]);
 
@@ -123,12 +131,15 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
           <StatCard label="Pendientes" value={stats.pendiente} icon={Clock} tone="warning" />
           <StatCard label="En proceso" value={stats.en_proceso} icon={Loader2} tone="primary" />
           <StatCard label="En revisión" value={stats.en_revision} icon={Eye} tone="review" />
           <StatCard label="Finalizados" value={stats.finalizado} icon={CheckCircle2} tone="success" />
           <StatCard label="Críticos activos" value={stats.critica} icon={AlertOctagon} tone="destructive" />
+          {(isSupervisor || isTecnico) && (
+            <StatCard label="Tiempo prom. resolución" value={stats.tiempoPromedio} icon={Timer} tone="primary" />
+          )}
         </div>
 
         <div className="flex items-center justify-between">

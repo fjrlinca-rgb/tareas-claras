@@ -11,12 +11,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useReportesDiarios, RangoFiltro } from "@/hooks/useReportesDiarios";
 import { exportarExcel, exportarPDF } from "@/lib/reportesExport";
-import { Ticket, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/tickets";
+import { Ticket, PRIORITY_LABEL, STATUS_LABEL, formatDuracion } from "@/lib/tickets";
+import { Cronometro } from "@/components/Cronometro";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area,
 } from "recharts";
 import {
-  Download, FileSpreadsheet, RefreshCw, AlertTriangle, CheckCircle2, Users, Inbox, Eye, Clock,
+  Download, FileSpreadsheet, RefreshCw, AlertTriangle, CheckCircle2, Users, Inbox, Eye, Clock, Timer,
 } from "lucide-react";
 
 interface KpiProps {
@@ -153,7 +154,12 @@ const Reportes = () => {
     const tecActivos = new Set(
       tickets.filter((t) => t.assigned_technician && t.status !== "finalizado").map((t) => t.assigned_technician),
     ).size;
-    return { total, pend, rev, fin, crit, tecActivos };
+    const tiempos = tickets
+      .filter((t) => t.status === "finalizado")
+      .map((t) => t.tiempo_resolucion_segundos ?? 0)
+      .filter((s) => s > 0);
+    const promedio = tiempos.length ? formatDuracion(Math.round(tiempos.reduce((a, b) => a + b, 0) / tiempos.length)) : "—";
+    return { total, pend, rev, fin, crit, tecActivos, promedio };
   }, [tickets]);
 
   // Top técnicos
@@ -231,17 +237,18 @@ const Reportes = () => {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)}
+          <div className="grid grid-cols-2 lg:grid-cols-7 gap-3">
+            {Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
             <KPI label="Tickets totales" value={kpis.total} icon={Inbox} tone="primary" />
             <KPI label="Pendientes" value={kpis.pend} icon={Clock} tone="warning" />
             <KPI label="En revisión" value={kpis.rev} icon={Eye} tone="review" />
             <KPI label="Finalizados" value={kpis.fin} icon={CheckCircle2} tone="success" />
             <KPI label="Críticos" value={kpis.crit} icon={AlertTriangle} tone="destructive" />
             <KPI label="Técnicos activos" value={kpis.tecActivos} icon={Users} tone="muted" />
+            <KPI label="Tiempo prom." value={kpis.promedio} icon={Timer} tone="primary" />
           </div>
         )}
 
@@ -321,16 +328,17 @@ const Reportes = () => {
                   <TableHead>Prioridad</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead>Creado</TableHead>
-                  <TableHead className="text-right">Tiempo abierto</TableHead>
+                  <TableHead>Tiempo abierto</TableHead>
+                  <TableHead className="text-right">Tiempo resolución</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}><TableCell colSpan={6}><Skeleton className="h-5 w-full" /></TableCell></TableRow>
+                    <TableRow key={i}><TableCell colSpan={7}><Skeleton className="h-5 w-full" /></TableCell></TableRow>
                   ))
                 ) : tickets.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-10">Sin tickets en el periodo.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-10">Sin tickets en el periodo.</TableCell></TableRow>
                 ) : (
                   tickets.slice(0, 50).map((t) => (
                     <TableRow key={t.id}>
@@ -339,8 +347,11 @@ const Reportes = () => {
                       <TableCell><Badge variant="outline" className={priorityBadge[t.priority]}>{PRIORITY_LABEL[t.priority]}</Badge></TableCell>
                       <TableCell><Badge variant="outline" className={statusBadge[t.status]}>{STATUS_LABEL[t.status]}</Badge></TableCell>
                       <TableCell className="text-muted-foreground tabular-nums">{new Date(t.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-muted-foreground tabular-nums">
                         {t.status === "finalizado" ? <span className="text-muted-foreground">—</span> : tiempoAbierto(t.created_at)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Cronometro ticket={t} compact liveSuffix={t.status === "en_revision" ? "rev." : t.status === "en_proceso" ? "proc." : undefined} />
                       </TableCell>
                     </TableRow>
                   ))

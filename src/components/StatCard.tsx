@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   label: string;
-  value: number;
+  value: number | string;
   icon: LucideIcon;
   tone: "warning" | "primary" | "success" | "destructive" | "review";
 }
