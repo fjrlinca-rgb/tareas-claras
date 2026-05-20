@@ -130,6 +130,75 @@ export type Database = {
           },
         ]
       }
+      reportes_diarios: {
+        Row: {
+          created_at: string
+          criticos: number
+          en_proceso: number
+          en_revision: number
+          fecha: string
+          finalizados: number
+          id: string
+          pendientes: number
+          prioridad_alta: number
+          prioridad_baja: number
+          prioridad_critica: number
+          prioridad_media: number
+          sla_cumplido_pct: number
+          tickets_creados: number
+          tickets_finalizados: number
+          tickets_por_empresa: Json
+          tickets_por_tecnico: Json
+          tiempo_promedio_resolucion_horas: number
+          total_tickets: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criticos?: number
+          en_proceso?: number
+          en_revision?: number
+          fecha: string
+          finalizados?: number
+          id?: string
+          pendientes?: number
+          prioridad_alta?: number
+          prioridad_baja?: number
+          prioridad_critica?: number
+          prioridad_media?: number
+          sla_cumplido_pct?: number
+          tickets_creados?: number
+          tickets_finalizados?: number
+          tickets_por_empresa?: Json
+          tickets_por_tecnico?: Json
+          tiempo_promedio_resolucion_horas?: number
+          total_tickets?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criticos?: number
+          en_proceso?: number
+          en_revision?: number
+          fecha?: string
+          finalizados?: number
+          id?: string
+          pendientes?: number
+          prioridad_alta?: number
+          prioridad_baja?: number
+          prioridad_critica?: number
+          prioridad_media?: number
+          sla_cumplido_pct?: number
+          tickets_creados?: number
+          tickets_finalizados?: number
+          tickets_por_empresa?: Json
+          tickets_por_tecnico?: Json
+          tiempo_promedio_resolucion_horas?: number
+          total_tickets?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       technicians: {
         Row: {
           active: boolean
@@ -236,6 +305,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generar_snapshot_diario: {
+        Args: { fecha_objetivo?: string }
+        Returns: {
+          created_at: string
+          criticos: number
+          en_proceso: number
+          en_revision: number
+          fecha: string
+          finalizados: number
+          id: string
+          pendientes: number
+          prioridad_alta: number
+          prioridad_baja: number
+          prioridad_critica: number
+          prioridad_media: number
+          sla_cumplido_pct: number
+          tickets_creados: number
+          tickets_finalizados: number
+          tickets_por_empresa: Json
+          tickets_por_tecnico: Json
+          tiempo_promedio_resolucion_horas: number
+          total_tickets: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reportes_diarios"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
