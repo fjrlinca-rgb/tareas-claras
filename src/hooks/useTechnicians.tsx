@@ -90,9 +90,9 @@ export function useTechnicians(enabled: boolean = true) {
   // Realtime: refrescar cuando cambien roles, perfiles, directorio o tickets
   useEffect(() => {
     if (!enabled) return;
-    const ch = supabase
-      .channel("techs-rt")
-      .on("postgres_changes", { event: "*", schema: "public", table: "user_roles" }, () => load())
+    const channelName = `techs-rt-${Math.random().toString(36).slice(2)}`;
+    const ch = supabase.channel(channelName);
+    ch.on("postgres_changes", { event: "*", schema: "public", table: "user_roles" }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "technicians" }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "entradas" }, () => load())
