@@ -42,6 +42,7 @@ export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, onAssign, 
               <TableHead className="w-[140px]">Estado</TableHead>
               <TableHead className="w-[200px]">Técnico</TableHead>
               <TableHead className="w-[140px]">Creado</TableHead>
+              <TableHead className="w-[150px]">Tiempo resolución</TableHead>
               <TableHead className="w-[120px] text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
