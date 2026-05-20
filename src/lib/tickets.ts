@@ -10,6 +10,7 @@ export interface Ticket {
   status: Status;
   assigned_technician: string | null;
   observations?: string | null;
+  visto_por_tecnico?: boolean;
   created_at: string;
   updated_at: string;
 }

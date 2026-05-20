@@ -75,6 +75,14 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
     }
   }, [open, ticket]);
 
+  // Técnico: al abrir un ticket asignado no leído, marcar como visto.
+  useEffect(() => {
+    if (!open || !isTecnico || !ticket?.id) return;
+    if ((ticket as any).visto_por_tecnico === false) {
+      supabase.from("entradas").update({ visto_por_tecnico: true }).eq("id", ticket.id).then(() => {});
+    }
+  }, [open, isTecnico, ticket?.id]);
+
   // Cargar empresa / correo del solicitante (solo supervisor en edición)
   useEffect(() => {
     if (!open || !isSupervisor || !ticket?.user_id) return;

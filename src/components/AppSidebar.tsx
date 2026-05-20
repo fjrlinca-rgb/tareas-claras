@@ -6,7 +6,9 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole, AppRole } from "@/hooks/useUserRole";
+import { useUnseenTickets } from "@/hooks/useUnseenTickets";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 type Item = { title: string; url: string; icon: any; roles: AppRole[] };
@@ -28,6 +30,7 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { primary } = useUserRole();
   const navigate = useNavigate();
+  const unseen = useUnseenTickets();
 
   const items = ALL_ITEMS.filter((i) => i.roles.includes(primary));
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
@@ -68,7 +71,18 @@ export function AppSidebar() {
                           : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                       )}>
                         <item.icon className="h-4 w-4 shrink-0" />
-                        {!collapsed && <span className="text-sm font-medium">{item.title}</span>}
+                        {!collapsed && <span className="text-sm font-medium flex-1">{item.title}</span>}
+                        {item.url === "/tickets" && unseen > 0 && (
+                          <Badge
+                            variant="destructive"
+                            className={cn(
+                              "h-5 min-w-5 px-1.5 rounded-full text-[10px] font-semibold tabular-nums",
+                              collapsed && "absolute top-1 right-1 h-4 min-w-4 px-1"
+                            )}
+                          >
+                            {unseen > 99 ? "99+" : unseen}
+                          </Badge>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
