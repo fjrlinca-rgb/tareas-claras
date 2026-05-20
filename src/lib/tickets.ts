@@ -1,5 +1,5 @@
 export type Priority = "baja" | "media" | "alta" | "critica";
-export type Status = "pendiente" | "en_proceso" | "finalizado";
+export type Status = "pendiente" | "en_proceso" | "en_revision" | "finalizado";
 
 export interface Ticket {
   id: string;
@@ -24,8 +24,9 @@ export const PRIORITY_LABEL: Record<Priority, string> = {
 export const STATUS_LABEL: Record<Status, string> = {
   pendiente: "Pendiente",
   en_proceso: "En proceso",
+  en_revision: "En revisión",
   finalizado: "Finalizado",
 };
 
 export const PRIORITIES: Priority[] = ["baja", "media", "alta", "critica"];
-export const STATUSES: Status[] = ["pendiente", "en_proceso", "finalizado"];
+export const STATUSES: Status[] = ["pendiente", "en_proceso", "en_revision", "finalizado"];

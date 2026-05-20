@@ -19,6 +19,7 @@ const priorityIcons: Record<Priority, React.ComponentType<{ className?: string }
 const statusClasses: Record<Status, string> = {
   pendiente: "bg-status-pendiente-soft text-status-pendiente border-status-pendiente/30",
   en_proceso: "bg-status-proceso-soft text-status-proceso border-status-proceso/30",
+  en_revision: "bg-status-revision-soft text-status-revision border-status-revision/30",
   finalizado: "bg-status-finalizado-soft text-status-finalizado border-status-finalizado/30",
 };
 
@@ -44,6 +45,7 @@ export const StatusBadge = ({ status }: { status: Status }) => {
       <span className={cn("h-1.5 w-1.5 rounded-full", {
         "bg-status-pendiente": status === "pendiente",
         "bg-status-proceso": status === "en_proceso",
+        "bg-status-revision": status === "en_revision",
         "bg-status-finalizado": status === "finalizado",
       })} />
       {STATUS_LABEL[status]}

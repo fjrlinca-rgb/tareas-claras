@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Priority, Status, Ticket, PRIORITY_LABEL, STATUS_LABEL, PRIORITIES, STATUSES } from "@/lib/tickets";
 import { AppRole } from "@/hooks/useUserRole";
-import { ShieldCheck, Wrench, User, History, Pencil, Building2, Calendar, AlertCircle, FileText } from "lucide-react";
+import { ShieldCheck, Wrench, User, History, Pencil, Building2, Calendar, AlertCircle, FileText, Eye } from "lucide-react";
 import { Technician } from "@/hooks/useTechnicians";
 import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { TicketHistory } from "./TicketHistory";
@@ -358,8 +358,31 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
         </div>
       )}
 
-      <DialogFooter>
+      <DialogFooter className="gap-2 sm:gap-2">
         <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cerrar</Button>
+        {isTecnico && isEdit && ticket && ticket.status !== "en_revision" && ticket.status !== "finalizado" && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={saving}
+            className="border-status-revision/40 text-status-revision hover:bg-status-revision-soft hover:text-status-revision"
+            onClick={async () => {
+              setSaving(true);
+              await onSave({
+                title: ticket.title,
+                description: ticket.description,
+                priority: ticket.priority as Priority,
+                status: "en_revision",
+                assigned_technician: ticket.assigned_technician,
+                observations: (observations.trim() || (ticket as any).observations) || null,
+              });
+              setSaving(false);
+              onOpenChange(false);
+            }}
+          >
+            <Eye className="h-4 w-4 mr-1" /> Marcar en revisión
+          </Button>
+        )}
         {!(isCliente && isEdit) && (
           <Button type="submit" disabled={saving}>{saving ? "Guardando..." : isEdit ? "Guardar cambios" : "Crear ticket"}</Button>
         )}

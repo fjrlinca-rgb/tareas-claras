@@ -71,6 +71,8 @@ export default {
           "pendiente-soft": "hsl(var(--status-pendiente-soft))",
           proceso: "hsl(var(--status-proceso))",
           "proceso-soft": "hsl(var(--status-proceso-soft))",
+          revision: "hsl(var(--status-revision))",
+          "revision-soft": "hsl(var(--status-revision-soft))",
           finalizado: "hsl(var(--status-finalizado))",
           "finalizado-soft": "hsl(var(--status-finalizado-soft))",
         },
