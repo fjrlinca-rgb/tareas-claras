@@ -10,6 +10,7 @@ import { Priority, Status, Ticket, PRIORITY_LABEL, STATUS_LABEL, PRIORITIES, STA
 import { AppRole } from "@/hooks/useUserRole";
 import { ShieldCheck, Wrench, User, History, Pencil, Building2, Calendar, AlertCircle, FileText } from "lucide-react";
 import { Technician } from "@/hooks/useTechnicians";
+import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { TicketHistory } from "./TicketHistory";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -47,6 +48,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
   const isSupervisor = role === "supervisor";
   const isTecnico = role === "tecnico";
   const isCliente = role === "cliente";
+  const { getName: getTechnicianName } = useTechnicianNames();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -330,7 +332,15 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
       {isTecnico && ticket?.assigned_technician && (
         <div className="space-y-1">
           <Label className="text-muted-foreground">Asignado a</Label>
-          <p className="text-sm">{ticket.assigned_technician}</p>
+          {(() => {
+            const name = getTechnicianName(ticket.assigned_technician);
+            return (
+              <div>
+                <p className="text-sm font-medium">{name ?? ticket.assigned_technician}</p>
+                {name && <p className="text-xs text-muted-foreground">{ticket.assigned_technician}</p>}
+              </div>
+            );
+          })()}
         </div>
       )}
 

@@ -15,9 +15,10 @@ interface Props {
   onFinalize?: (t: Ticket) => void;
   onAssign?: (t: Ticket) => void;
   role?: AppRole;
+  getTechnicianName?: (email: string | null | undefined) => string | null;
 }
 
-export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, onAssign, role = "cliente" }: Props) => {
+export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, onAssign, role = "cliente", getTechnicianName }: Props) => {
   const isSupervisor = role === "supervisor";
   const isTecnico = role === "tecnico";
 
@@ -59,10 +60,22 @@ export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, onAssign, 
                 <TableCell><StatusBadge status={t.status} /></TableCell>
                 <TableCell>
                   {t.assigned_technician ? (
-                    <span className="inline-flex items-center gap-1.5 text-sm">
-                      <User2 className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="truncate max-w-[160px]">{t.assigned_technician}</span>
-                    </span>
+                    (() => {
+                      const name = getTechnicianName?.(t.assigned_technician);
+                      return (
+                        <div className="flex items-start gap-1.5 text-sm min-w-0">
+                          <User2 className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                          <div className="min-w-0">
+                            <div className="font-medium truncate max-w-[170px]">{name ?? t.assigned_technician}</div>
+                            {name && (
+                              <div className="text-[11px] text-muted-foreground truncate max-w-[170px]">
+                                {t.assigned_technician}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()
                   ) : isSupervisor && onAssign ? (
                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAssign(t)}>
                       <UserPlus className="h-3 w-3 mr-1" /> Asignar técnico

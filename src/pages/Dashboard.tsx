@@ -14,6 +14,7 @@ import { TicketsTable } from "@/components/TicketsTable";
 import { TicketDialog, TicketFormValues } from "@/components/TicketDialog";
 import { Ticket } from "@/lib/tickets";
 import { seedDemoTickets } from "@/lib/seed";
+import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -25,6 +26,7 @@ const Dashboard = () => {
   const [seeding, setSeeding] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Ticket | null>(null);
+  const { getName: getTechnicianName } = useTechnicianNames();
 
   const load = useCallback(async () => {
     const { data, error } = await supabase
@@ -157,6 +159,7 @@ const Dashboard = () => {
             onEdit={openEdit}
             onDelete={isSupervisor ? handleDelete : undefined}
             onFinalize={isSupervisor || isTecnico ? handleFinalize : undefined}
+            getTechnicianName={getTechnicianName}
           />
         )}
       </div>

@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TicketsTable } from "@/components/TicketsTable";
 import { TicketDialog, TicketFormValues } from "@/components/TicketDialog";
 import { useTechnicians } from "@/hooks/useTechnicians";
+import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { Ticket, PRIORITIES, STATUSES, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/tickets";
 import { toast } from "sonner";
 
@@ -45,6 +46,7 @@ const TicketsPage = () => {
   useRealtimeEntradas(load);
 
   const { technicians: registeredTechs } = useTechnicians(isSupervisor);
+  const { getName: getTechnicianName } = useTechnicianNames();
 
   const technicians = useMemo(() => {
     const s = new Set<string>();
@@ -186,7 +188,14 @@ const TicketsPage = () => {
                 <SelectContent>
                   <SelectItem value="all">Todos los técnicos</SelectItem>
                   <SelectItem value="__none__">Sin asignar</SelectItem>
-                  {technicians.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  {technicians.map((t) => {
+                    const name = getTechnicianName(t);
+                    return (
+                      <SelectItem key={t} value={t}>
+                        {name ? `${name} · ${t}` : t}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             )}
@@ -204,6 +213,7 @@ const TicketsPage = () => {
               onAssign={isSupervisor ? openEdit : undefined}
               onDelete={isSupervisor ? handleDelete : undefined}
               onFinalize={isSupervisor || isTecnico ? handleFinalize : undefined}
+              getTechnicianName={getTechnicianName}
             />
             {filtered.length > 0 && (
               <div className="flex items-center justify-between text-sm">
