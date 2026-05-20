@@ -213,6 +213,7 @@ const TicketsPage = () => {
               onAssign={isSupervisor ? openEdit : undefined}
               onDelete={isSupervisor ? handleDelete : undefined}
               onFinalize={isSupervisor || isTecnico ? handleFinalize : undefined}
+              getTechnicianName={getTechnicianName}
             />
             {filtered.length > 0 && (
               <div className="flex items-center justify-between text-sm">
