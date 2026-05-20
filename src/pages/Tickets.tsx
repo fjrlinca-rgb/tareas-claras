@@ -46,6 +46,7 @@ const TicketsPage = () => {
   useRealtimeEntradas(load);
 
   const { technicians: registeredTechs } = useTechnicians(isSupervisor);
+  const { getName: getTechnicianName } = useTechnicianNames();
 
   const technicians = useMemo(() => {
     const s = new Set<string>();
