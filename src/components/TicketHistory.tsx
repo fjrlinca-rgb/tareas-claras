@@ -24,17 +24,30 @@ const FIELD_LABEL: Record<string, { label: string; icon: any }> = {
   observations: { label: "Observaciones", icon: FileText },
 };
 
-const formatValue = (field: string | null, value: string | null) => {
+const formatValue = (
+  field: string | null,
+  value: string | null,
+  getTechnicianName?: (email?: string | null) => string | null
+) => {
   if (!value) return <span className="italic text-muted-foreground">vacío</span>;
   if (field === "status") return STATUS_LABEL[value as keyof typeof STATUS_LABEL] ?? value;
   if (field === "priority") return PRIORITY_LABEL[value as keyof typeof PRIORITY_LABEL] ?? value;
   if (field === "observations") return value.length > 60 ? value.slice(0, 60) + "…" : value;
+  if (field === "assigned_technician") {
+    const name = getTechnicianName?.(value);
+    return name ? (
+      <span>
+        {name} <span className="text-xs text-muted-foreground">({value})</span>
+      </span>
+    ) : value;
+  }
   return value;
 };
 
 export const TicketHistory = ({ ticketId }: { ticketId: string }) => {
   const [rows, setRows] = useState<HistoryRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getName: getTechnicianName } = useTechnicianNames();
 
   useEffect(() => {
     let active = true;
