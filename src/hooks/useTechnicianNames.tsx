@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -8,8 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export function useTechnicianNames() {
   const [map, setMap] = useState<Map<string, string>>(new Map());
+  const loadingRef = useRef(false);
+  const pendingRef = useRef(false);
 
   const load = useCallback(async () => {
+    if (loadingRef.current) { pendingRef.current = true; return; }
+    loadingRef.current = true;
     try {
       const { data: roleRows } = await supabase
         .from("user_roles")
@@ -36,6 +40,9 @@ export function useTechnicianNames() {
     } catch (e) {
       console.error("[useTechnicianNames] load failed", e);
       setMap(new Map());
+    } finally {
+      loadingRef.current = false;
+      pendingRef.current = false;
     }
   }, []);
 

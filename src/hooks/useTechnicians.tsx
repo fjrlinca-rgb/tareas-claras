@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Technician {
@@ -20,9 +20,13 @@ export interface Technician {
 export function useTechnicians(enabled: boolean = true) {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(enabled);
+  const loadingRef = useRef(false);
+  const pendingRef = useRef(false);
 
   const load = useCallback(async () => {
-    if (!enabled) return;
+    if (!enabled) { setTechnicians([]); setLoading(false); return; }
+    if (loadingRef.current) { pendingRef.current = true; return; }
+    loadingRef.current = true;
     setLoading(true);
     try {
       const { data: roleRows, error: roleErr } = await supabase
@@ -82,6 +86,8 @@ export function useTechnicians(enabled: boolean = true) {
       console.error("[useTechnicians] load failed", e);
       setTechnicians([]);
     } finally {
+      loadingRef.current = false;
+      pendingRef.current = false;
       setLoading(false);
     }
   }, [enabled]);
