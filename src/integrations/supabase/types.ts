@@ -59,6 +59,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          visto_por_supervisor: boolean
           visto_por_tecnico: boolean
         }
         Insert: {
@@ -72,6 +73,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          visto_por_supervisor?: boolean
           visto_por_tecnico?: boolean
         }
         Update: {
@@ -85,6 +87,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          visto_por_supervisor?: boolean
           visto_por_tecnico?: boolean
         }
         Relationships: []

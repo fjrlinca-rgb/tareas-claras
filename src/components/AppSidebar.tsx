@@ -7,6 +7,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole, AppRole } from "@/hooks/useUserRole";
 import { useUnseenTickets } from "@/hooks/useUnseenTickets";
+import { useUnseenSupervisor } from "@/hooks/useUnseenSupervisor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,9 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { primary } = useUserRole();
   const navigate = useNavigate();
-  const unseen = useUnseenTickets();
+  const unseenTec = useUnseenTickets();
+  const unseenSup = useUnseenSupervisor();
+  const unseen = primary === "supervisor" ? unseenSup : primary === "tecnico" ? unseenTec : 0;
 
   const items = ALL_ITEMS.filter((i) => i.roles.includes(primary));
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
