@@ -188,7 +188,14 @@ const TicketsPage = () => {
                 <SelectContent>
                   <SelectItem value="all">Todos los técnicos</SelectItem>
                   <SelectItem value="__none__">Sin asignar</SelectItem>
-                  {technicians.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  {technicians.map((t) => {
+                    const name = getTechnicianName(t);
+                    return (
+                      <SelectItem key={t} value={t}>
+                        {name ? `${name} · ${t}` : t}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             )}
