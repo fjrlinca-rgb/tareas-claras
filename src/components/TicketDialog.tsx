@@ -224,6 +224,32 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
                 <p className="text-sm text-foreground/90 whitespace-pre-wrap">{ticket!.description}</p>
               </div>
             )}
+
+            {/* Cronómetro de atención */}
+            <div className="pt-2 border-t border-border/60 grid grid-cols-3 gap-3 text-xs">
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Inicio revisión</p>
+                <p className="font-medium mt-0.5">
+                  {(ticket as any).fecha_inicio_revision
+                    ? format(new Date((ticket as any).fecha_inicio_revision), "d MMM HH:mm", { locale: es })
+                    : <span className="text-muted-foreground">—</span>}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Finalizado</p>
+                <p className="font-medium mt-0.5">
+                  {(ticket as any).fecha_finalizacion
+                    ? format(new Date((ticket as any).fecha_finalizacion), "d MMM HH:mm", { locale: es })
+                    : <span className="text-muted-foreground">—</span>}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Tiempo total</p>
+                <div className="mt-0.5">
+                  <Cronometro ticket={ticket as any} liveSuffix={ticket!.status === "en_revision" ? "en revisión" : ticket!.status === "en_proceso" ? "en proceso" : undefined} />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Formulario compacto */}
