@@ -308,7 +308,14 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
       ) : (
         <div className="space-y-2">
           <Label htmlFor="desc">Descripción del problema</Label>
-          <Textarea id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe el problema con el mayor detalle posible..." rows={4} />
+          <Textarea
+            id="desc"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe detalladamente el problema, mensajes de error, equipos afectados, horarios y cualquier información útil."
+            rows={6}
+            className="min-h-[140px] resize-y px-4 py-3 text-sm leading-relaxed placeholder:text-muted-foreground/70"
+          />
         </div>
       )}
 
