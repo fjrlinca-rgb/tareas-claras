@@ -15,9 +15,10 @@ interface Props {
   onFinalize?: (t: Ticket) => void;
   onAssign?: (t: Ticket) => void;
   role?: AppRole;
+  getTechnicianName?: (email: string | null | undefined) => string | null;
 }
 
-export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, onAssign, role = "cliente" }: Props) => {
+export const TicketsTable = ({ tickets, onEdit, onDelete, onFinalize, onAssign, role = "cliente", getTechnicianName }: Props) => {
   const isSupervisor = role === "supervisor";
   const isTecnico = role === "tecnico";
 
