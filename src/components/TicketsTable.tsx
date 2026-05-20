@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card } from "@/components/ui/card";
 import { Ticket } from "@/lib/tickets";
 import { PriorityBadge, StatusBadge } from "./TicketBadges";
+import { Cronometro } from "./Cronometro";
 import { AppRole } from "@/hooks/useUserRole";
 
 interface Props {
