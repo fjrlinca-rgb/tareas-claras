@@ -12,6 +12,7 @@ import { ShieldCheck, Wrench, User, History, Pencil, Building2, Calendar, AlertC
 import { Technician } from "@/hooks/useTechnicians";
 import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { TicketHistory } from "./TicketHistory";
+import { Cronometro } from "./Cronometro";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
