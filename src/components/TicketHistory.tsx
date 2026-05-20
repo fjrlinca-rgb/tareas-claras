@@ -90,9 +90,9 @@ export const TicketHistory = ({ ticketId }: { ticketId: string }) => {
                   <p className="text-sm">
                     <span className="font-medium">{meta?.label ?? r.field}</span>
                     {": "}
-                    <span className="text-muted-foreground">{formatValue(r.field, r.old_value)}</span>
+                    <span className="text-muted-foreground">{formatValue(r.field, r.old_value, getTechnicianName)}</span>
                     <ArrowRight className="inline h-3 w-3 mx-1 text-muted-foreground" />
-                    <span className="font-medium">{formatValue(r.field, r.new_value)}</span>
+                    <span className="font-medium">{formatValue(r.field, r.new_value, getTechnicianName)}</span>
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-0.5">
