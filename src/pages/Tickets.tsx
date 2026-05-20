@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TicketsTable } from "@/components/TicketsTable";
 import { TicketDialog, TicketFormValues } from "@/components/TicketDialog";
 import { useTechnicians } from "@/hooks/useTechnicians";
+import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { Ticket, PRIORITIES, STATUSES, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/tickets";
 import { toast } from "sonner";
 
