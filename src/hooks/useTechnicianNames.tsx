@@ -10,26 +10,33 @@ export function useTechnicianNames() {
   const [map, setMap] = useState<Map<string, string>>(new Map());
 
   const load = useCallback(async () => {
-    const { data: roleRows } = await supabase
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "tecnico");
-    const userIds = Array.from(new Set((roleRows ?? []).map((r: any) => r.user_id)));
+    try {
+      const { data: roleRows } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "tecnico");
+      const userIds = Array.from(
+        new Set((Array.isArray(roleRows) ? roleRows : []).map((r: any) => r?.user_id).filter(Boolean))
+      );
 
-    if (userIds.length === 0) { setMap(new Map()); return; }
+      if (userIds.length === 0) { setMap(new Map()); return; }
 
-    const { data: profs } = await supabase
-      .from("profiles")
-      .select("email,full_name,username")
-      .in("id", userIds);
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("email,full_name,username")
+        .in("id", userIds);
 
-    const m = new Map<string, string>();
-    (profs ?? []).forEach((p: any) => {
-      if (!p?.email) return;
-      const name = p.full_name || p.username;
-      if (name) m.set(p.email.toLowerCase(), name);
-    });
-    setMap(m);
+      const m = new Map<string, string>();
+      (Array.isArray(profs) ? profs : []).forEach((p: any) => {
+        if (!p?.email) return;
+        const name = p.full_name || p.username;
+        if (name) m.set(String(p.email).toLowerCase(), name);
+      });
+      setMap(m);
+    } catch (e) {
+      console.error("[useTechnicianNames] load failed", e);
+      setMap(new Map());
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
