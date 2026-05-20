@@ -11,6 +11,7 @@ export interface Ticket {
   assigned_technician: string | null;
   observations?: string | null;
   visto_por_tecnico?: boolean;
+  visto_por_supervisor?: boolean;
   created_at: string;
   updated_at: string;
 }
