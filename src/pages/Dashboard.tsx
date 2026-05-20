@@ -26,6 +26,7 @@ const Dashboard = () => {
   const [seeding, setSeeding] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Ticket | null>(null);
+  const { getName: getTechnicianName } = useTechnicianNames();
 
   const load = useCallback(async () => {
     const { data, error } = await supabase
