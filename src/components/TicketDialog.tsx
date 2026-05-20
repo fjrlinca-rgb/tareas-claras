@@ -332,7 +332,15 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
       {isTecnico && ticket?.assigned_technician && (
         <div className="space-y-1">
           <Label className="text-muted-foreground">Asignado a</Label>
-          <p className="text-sm">{ticket.assigned_technician}</p>
+          {(() => {
+            const name = getTechnicianName(ticket.assigned_technician);
+            return (
+              <div>
+                <p className="text-sm font-medium">{name ?? ticket.assigned_technician}</p>
+                {name && <p className="text-xs text-muted-foreground">{ticket.assigned_technician}</p>}
+              </div>
+            );
+          })()}
         </div>
       )}
 
