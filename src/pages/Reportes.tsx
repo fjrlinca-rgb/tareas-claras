@@ -42,6 +42,7 @@ const Reportes = () => {
   const statusColor: Record<string, string> = {
     pendiente: "bg-status-pendiente",
     en_proceso: "bg-status-proceso",
+    en_revision: "bg-status-revision",
     finalizado: "bg-status-finalizado",
   };
 
