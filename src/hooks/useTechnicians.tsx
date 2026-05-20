@@ -87,11 +87,8 @@ export function useTechnicians(enabled: boolean = true) {
       setTechnicians([]);
     } finally {
       loadingRef.current = false;
+      pendingRef.current = false;
       setLoading(false);
-      if (pendingRef.current) {
-        pendingRef.current = false;
-        void load();
-      }
     }
   }, [enabled]);
 
