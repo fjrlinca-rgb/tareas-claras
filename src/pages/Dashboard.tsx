@@ -159,6 +159,7 @@ const Dashboard = () => {
             onEdit={openEdit}
             onDelete={isSupervisor ? handleDelete : undefined}
             onFinalize={isSupervisor || isTecnico ? handleFinalize : undefined}
+            getTechnicianName={getTechnicianName}
           />
         )}
       </div>
