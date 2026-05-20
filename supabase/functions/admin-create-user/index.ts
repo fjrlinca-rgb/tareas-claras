@@ -41,7 +41,15 @@ Deno.serve(async (req) => {
 
     if (username) {
       const { data: dup } = await admin.from("profiles").select("id").ilike("username", username).maybeSingle();
-      if (dup) return json({ error: "El usuario ya está en uso" }, 400);
+      if (dup) {
+        // Check if the auth user still exists; if it's an orphan profile, clean it up.
+        const { data: existsUser } = await admin.auth.admin.getUserById(dup.id);
+        if (existsUser?.user) {
+          return json({ error: "El usuario ya está en uso" }, 400);
+        }
+        await admin.from("user_roles").delete().eq("user_id", dup.id);
+        await admin.from("profiles").delete().eq("id", dup.id);
+      }
     }
 
     const { data: created, error: cErr } = await admin.auth.admin.createUser({
