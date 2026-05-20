@@ -17,7 +17,7 @@ import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area,
 } from "recharts";
 import {
-  Download, FileSpreadsheet, RefreshCw, AlertTriangle, CheckCircle2, Users, Inbox, Eye, Clock,
+  Download, FileSpreadsheet, RefreshCw, AlertTriangle, CheckCircle2, Users, Inbox, Eye, Clock, Timer,
 } from "lucide-react";
 
 interface KpiProps {
