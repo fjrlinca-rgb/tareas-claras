@@ -154,7 +154,12 @@ const Reportes = () => {
     const tecActivos = new Set(
       tickets.filter((t) => t.assigned_technician && t.status !== "finalizado").map((t) => t.assigned_technician),
     ).size;
-    return { total, pend, rev, fin, crit, tecActivos };
+    const tiempos = tickets
+      .filter((t) => t.status === "finalizado")
+      .map((t) => t.tiempo_resolucion_segundos ?? 0)
+      .filter((s) => s > 0);
+    const promedio = tiempos.length ? formatDuracion(Math.round(tiempos.reduce((a, b) => a + b, 0) / tiempos.length)) : "—";
+    return { total, pend, rev, fin, crit, tecActivos, promedio };
   }, [tickets]);
 
   // Top técnicos
