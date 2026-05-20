@@ -109,7 +109,7 @@ const SelectItem = React.forwardRef<
       ref={ref}
       textValue={textValue}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-accent focus:text-accent-foreground",
+        "group relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-accent focus:text-accent-foreground",
         className,
       )}
       {...props}
@@ -122,10 +122,10 @@ const SelectItem = React.forwardRef<
 
       {isRichContent ? (
         <>
-          <SelectPrimitive.ItemText>
-            <span className="sr-only">{textValue}</span>
-          </SelectPrimitive.ItemText>
-          <span className="min-w-0 flex-1">{children}</span>
+          <SelectPrimitive.ItemText>{textValue}</SelectPrimitive.ItemText>
+          <span aria-hidden="true" className="absolute inset-y-0 left-8 right-2 flex items-center bg-popover group-focus:bg-accent">
+            {children}
+          </span>
         </>
       ) : (
         <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
