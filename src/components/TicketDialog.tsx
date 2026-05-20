@@ -405,6 +405,30 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
         </div>
       )}
 
+      {(isTecnico || (isCliente && isEdit)) && ticket && (
+        <div className="rounded-md border border-border bg-muted/30 px-3 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+          <div>
+            <span className="text-muted-foreground">Inicio revisión: </span>
+            <span className="font-medium">
+              {(ticket as any).fecha_inicio_revision
+                ? format(new Date((ticket as any).fecha_inicio_revision), "d MMM HH:mm", { locale: es })
+                : "—"}
+            </span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Finalizado: </span>
+            <span className="font-medium">
+              {(ticket as any).fecha_finalizacion
+                ? format(new Date((ticket as any).fecha_finalizacion), "d MMM HH:mm", { locale: es })
+                : "—"}
+            </span>
+          </div>
+          <div className="ml-auto">
+            <Cronometro ticket={ticket as any} liveSuffix={ticket.status === "en_revision" ? "en revisión" : ticket.status === "en_proceso" ? "en proceso" : undefined} />
+          </div>
+        </div>
+      )}
+
       {isTecnico && (
         <div className="space-y-2">
           <Label htmlFor="obs">Observaciones internas</Label>
