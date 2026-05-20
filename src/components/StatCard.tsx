@@ -6,12 +6,13 @@ interface Props {
   label: string;
   value: number;
   icon: LucideIcon;
-  tone: "warning" | "primary" | "success" | "destructive";
+  tone: "warning" | "primary" | "success" | "destructive" | "review";
 }
 
 const tones = {
   warning: { ring: "bg-status-pendiente-soft text-status-pendiente", bar: "bg-status-pendiente" },
   primary: { ring: "bg-status-proceso-soft text-status-proceso", bar: "bg-status-proceso" },
+  review: { ring: "bg-status-revision-soft text-status-revision", bar: "bg-status-revision" },
   success: { ring: "bg-status-finalizado-soft text-status-finalizado", bar: "bg-status-finalizado" },
   destructive: { ring: "bg-priority-critica-soft text-priority-critica", bar: "bg-priority-critica" },
 };

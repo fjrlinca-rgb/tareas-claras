@@ -126,7 +126,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard label="Pendientes" value={stats.pendiente} icon={Clock} tone="warning" />
           <StatCard label="En proceso" value={stats.en_proceso} icon={Loader2} tone="primary" />
-          <StatCard label="En revisión" value={stats.en_revision} icon={Eye} tone="primary" />
+          <StatCard label="En revisión" value={stats.en_revision} icon={Eye} tone="review" />
           <StatCard label="Finalizados" value={stats.finalizado} icon={CheckCircle2} tone="success" />
           <StatCard label="Críticos activos" value={stats.critica} icon={AlertOctagon} tone="destructive" />
         </div>
