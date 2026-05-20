@@ -328,16 +328,17 @@ const Reportes = () => {
                   <TableHead>Prioridad</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead>Creado</TableHead>
-                  <TableHead className="text-right">Tiempo abierto</TableHead>
+                  <TableHead>Tiempo abierto</TableHead>
+                  <TableHead className="text-right">Tiempo resolución</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}><TableCell colSpan={6}><Skeleton className="h-5 w-full" /></TableCell></TableRow>
+                    <TableRow key={i}><TableCell colSpan={7}><Skeleton className="h-5 w-full" /></TableCell></TableRow>
                   ))
                 ) : tickets.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-10">Sin tickets en el periodo.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-10">Sin tickets en el periodo.</TableCell></TableRow>
                 ) : (
                   tickets.slice(0, 50).map((t) => (
                     <TableRow key={t.id}>
@@ -346,8 +347,11 @@ const Reportes = () => {
                       <TableCell><Badge variant="outline" className={priorityBadge[t.priority]}>{PRIORITY_LABEL[t.priority]}</Badge></TableCell>
                       <TableCell><Badge variant="outline" className={statusBadge[t.status]}>{STATUS_LABEL[t.status]}</Badge></TableCell>
                       <TableCell className="text-muted-foreground tabular-nums">{new Date(t.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-muted-foreground tabular-nums">
                         {t.status === "finalizado" ? <span className="text-muted-foreground">—</span> : tiempoAbierto(t.created_at)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Cronometro ticket={t} compact liveSuffix={t.status === "en_revision" ? "rev." : t.status === "en_proceso" ? "proc." : undefined} />
                       </TableCell>
                     </TableRow>
                   ))
