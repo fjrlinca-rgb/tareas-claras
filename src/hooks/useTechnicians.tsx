@@ -24,58 +24,66 @@ export function useTechnicians(enabled: boolean = true) {
   const load = useCallback(async () => {
     if (!enabled) return;
     setLoading(true);
+    try {
+      const { data: roleRows, error: roleErr } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "tecnico");
+      if (roleErr) throw roleErr;
 
-    // 1) Usuarios con rol técnico
-    const { data: roleRows } = await supabase
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "tecnico");
+      const userIds = Array.from(
+        new Set((Array.isArray(roleRows) ? roleRows : []).map((r: any) => r?.user_id).filter(Boolean))
+      );
 
-    const userIds = Array.from(new Set((roleRows ?? []).map((r: any) => r.user_id)));
+      if (userIds.length === 0) {
+        setTechnicians([]);
+        return;
+      }
 
-    if (userIds.length === 0) {
+      const [profRes, ticketRes] = await Promise.all([
+        supabase.from("profiles").select("id,email,full_name,username,active").in("id", userIds),
+        supabase.from("entradas").select("assigned_technician,status"),
+      ]);
+
+      const profs = Array.isArray(profRes?.data) ? profRes.data : [];
+      const tickets = Array.isArray(ticketRes?.data) ? ticketRes.data : [];
+
+      const counts = new Map<string, { active: number; total: number }>();
+      tickets.forEach((t: any) => {
+        const k = (t?.assigned_technician ?? "").toLowerCase();
+        if (!k) return;
+        const cur = counts.get(k) ?? { active: 0, total: 0 };
+        cur.total += 1;
+        if (t?.status !== "finalizado") cur.active += 1;
+        counts.set(k, cur);
+      });
+
+      const list: Technician[] = profs
+        .filter((p: any) => p?.email && p?.active !== false)
+        .map((p: any) => {
+          const key = String(p.email).toLowerCase();
+          const c = counts.get(key) ?? { active: 0, total: 0 };
+          const name = p.full_name || p.username || null;
+          return {
+            id: p.id,
+            email: p.email,
+            name,
+            phone: null,
+            specialty: null,
+            active: true,
+            ticketCount: c.active,
+            ticketCountTotal: c.total,
+          };
+        })
+        .sort((a, b) => String(a.name ?? a.email).localeCompare(String(b.name ?? b.email)));
+
+      setTechnicians(list);
+    } catch (e) {
+      console.error("[useTechnicians] load failed", e);
       setTechnicians([]);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // 2) Perfiles + 3) conteo de tickets
-    const [{ data: profs }, { data: tickets }] = await Promise.all([
-      supabase.from("profiles").select("id,email,full_name,username,active").in("id", userIds),
-      supabase.from("entradas").select("assigned_technician,status"),
-    ]);
-
-    const counts = new Map<string, { active: number; total: number }>();
-    (tickets ?? []).forEach((t: any) => {
-      const k = (t.assigned_technician ?? "").toLowerCase();
-      if (!k) return;
-      const cur = counts.get(k) ?? { active: 0, total: 0 };
-      cur.total += 1;
-      if (t.status !== "finalizado") cur.active += 1;
-      counts.set(k, cur);
-    });
-
-    const list: Technician[] = (profs ?? [])
-      .filter((p: any) => p.email && p.active !== false)
-      .map((p: any) => {
-        const key = p.email.toLowerCase();
-        const c = counts.get(key) ?? { active: 0, total: 0 };
-        const name = p.full_name || p.username || null;
-        return {
-          id: p.id,
-          email: p.email,
-          name,
-          phone: null,
-          specialty: null,
-          active: true,
-          ticketCount: c.active,
-          ticketCountTotal: c.total,
-        };
-      })
-      .sort((a, b) => (a.name ?? a.email).localeCompare(b.name ?? b.email));
-
-    setTechnicians(list);
-    setLoading(false);
   }, [enabled]);
 
   useEffect(() => { if (enabled) load(); }, [enabled, load]);
