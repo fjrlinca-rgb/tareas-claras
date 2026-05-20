@@ -54,6 +54,8 @@
     --status-pendiente-soft: 35 95% 94%;
     --status-proceso: 215 90% 52%;
     --status-proceso-soft: 215 90% 95%;
+    --status-revision: 200 90% 45%;
+    --status-revision-soft: 200 90% 94%;
     --status-finalizado: 145 60% 42%;
     --status-finalizado-soft: 145 60% 94%;
 
@@ -124,6 +126,8 @@
     --status-pendiente-soft: 35 35% 20%;
     --status-proceso: 215 85% 62%;
     --status-proceso-soft: 215 35% 20%;
+    --status-revision: 200 85% 60%;
+    --status-revision-soft: 200 35% 20%;
     --status-finalizado: 145 55% 50%;
     --status-finalizado-soft: 145 30% 18%;
 
