@@ -106,7 +106,7 @@ export const TicketDialog = ({
   useEffect(() => {
     if (!open || !isTecnico || !ticket?.id) return;
     if ((ticket as any).visto_por_tecnico === false) {
-      supabase.from("entradas").update({ visto_por_tecnico: true }).eq("id", ticket.id).then(() => {});
+      supabase.from(tableName as any).update({ visto_por_tecnico: true }).eq("id", ticket.id).then(() => {});
     }
   }, [open, isTecnico, ticket?.id]);
 
@@ -114,7 +114,7 @@ export const TicketDialog = ({
   useEffect(() => {
     if (!open || !isSupervisor || !ticket?.id) return;
     if ((ticket as any).visto_por_supervisor === false) {
-      supabase.from("entradas").update({ visto_por_supervisor: true }).eq("id", ticket.id).then(() => {});
+      supabase.from(tableName as any).update({ visto_por_supervisor: true }).eq("id", ticket.id).then(() => {});
     }
   }, [open, isSupervisor, ticket?.id]);
 
@@ -193,8 +193,8 @@ export const TicketDialog = ({
   );
 
   const titleText = isEdit
-    ? (isTecnico ? "Actualizar ticket asignado" : isCliente ? "Detalle del ticket" : "Gestionar ticket")
-    : "Crear nuevo ticket";
+    ? (isTecnico ? `Actualizar ${entityLabel} asignado` : isCliente ? `Detalle del ${entityLabel}` : `Gestionar ${entityLabel}`)
+    : `Crear nuevo ${entityLabel}`;
 
   // ============ VISTA SIMPLIFICADA SUPERVISOR (EDICIÓN) ============
   if (isEdit && isSupervisor) {
@@ -317,7 +317,7 @@ export const TicketDialog = ({
                 <Select value={status} onValueChange={(v) => setStatus(v as Status)}>
                   <SelectTrigger id="status"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+                    {statuses.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -409,7 +409,7 @@ export const TicketDialog = ({
             <Select value={status} onValueChange={(v) => setStatus(v as Status)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+                {statuses.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -495,7 +495,7 @@ export const TicketDialog = ({
           </Button>
         )}
         {!(isCliente && isEdit) && (
-          <Button type="submit" disabled={saving}>{saving ? "Guardando..." : isEdit ? "Guardar cambios" : "Crear ticket"}</Button>
+          <Button type="submit" disabled={saving}>{saving ? "Guardando..." : isEdit ? "Guardar cambios" : `Crear ${entityLabel}`}</Button>
         )}
       </DialogFooter>
     </form>
