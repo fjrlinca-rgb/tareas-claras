@@ -345,7 +345,7 @@ export const TicketDialog = ({
               <History className="h-4 w-4 text-muted-foreground" />
               <h4 className="text-sm font-semibold">Historial de cambios</h4>
             </div>
-            <TicketHistory ticketId={ticket!.id} />
+            <TicketHistory ticketId={ticket!.id} table={historyTable} idField={historyIdField} />
           </div>
         </DialogContent>
       </Dialog>
@@ -530,7 +530,7 @@ export const TicketDialog = ({
             </TabsList>
             <TabsContent value="edit" className="mt-4">{formBody}</TabsContent>
             <TabsContent value="history" className="mt-4">
-              <TicketHistory ticketId={ticket!.id} />
+              <TicketHistory ticketId={ticket!.id} table={historyTable} idField={historyIdField} />
             </TabsContent>
           </Tabs>
         ) : formBody}
