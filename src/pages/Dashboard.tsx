@@ -57,8 +57,11 @@ const Dashboard = () => {
       finalizado: finalizados.length,
       critica: tickets.filter((t) => t.priority === "critica" && t.status !== "finalizado").length,
       tiempoPromedio: tiempos.length ? formatDuracion(promedioSeg) : "—",
+      ot_pendiente: ordenes.filter((o) => o.status === "pendiente").length,
+      ot_revision: ordenes.filter((o) => o.status === "en_revision").length,
+      ot_finalizado: ordenes.filter((o) => o.status === "finalizado").length,
     };
-  }, [tickets]);
+  }, [tickets, ordenes]);
 
   const recent = useMemo(() => tickets.slice(0, 6), [tickets]);
 
