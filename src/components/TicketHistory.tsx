@@ -44,7 +44,11 @@ const formatValue = (
   return value;
 };
 
-export const TicketHistory = ({ ticketId }: { ticketId: string }) => {
+export const TicketHistory = ({
+  ticketId,
+  table = "ticket_history",
+  idField = "ticket_id",
+}: { ticketId: string; table?: string; idField?: string }) => {
   const [rows, setRows] = useState<HistoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const { getName: getTechnicianName } = useTechnicianNames();
@@ -54,21 +58,21 @@ export const TicketHistory = ({ ticketId }: { ticketId: string }) => {
     const load = async () => {
       setLoading(true);
       const { data } = await supabase
-        .from("ticket_history" as any)
+        .from(table as any)
         .select("id,action,field,old_value,new_value,changed_by_email,created_at")
-        .eq("ticket_id", ticketId)
+        .eq(idField, ticketId)
         .order("created_at", { ascending: false });
       if (active) { setRows((data ?? []) as any); setLoading(false); }
     };
     load();
     const ch = supabase
-      .channel(`ticket-history-${ticketId}`)
+      .channel(`${table}-${ticketId}`)
       .on("postgres_changes",
-        { event: "INSERT", schema: "public", table: "ticket_history", filter: `ticket_id=eq.${ticketId}` },
+        { event: "INSERT", schema: "public", table, filter: `${idField}=eq.${ticketId}` },
         () => load())
       .subscribe();
     return () => { active = false; supabase.removeChannel(ch); };
-  }, [ticketId]);
+  }, [ticketId, table, idField]);
 
   if (loading) return <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-12" />)}</div>;
   if (rows.length === 0) return <p className="text-sm text-muted-foreground italic">Sin actividad registrada.</p>;
