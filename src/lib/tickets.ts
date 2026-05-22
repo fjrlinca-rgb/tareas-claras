@@ -1,5 +1,5 @@
 export type Priority = "baja" | "media" | "alta" | "critica";
-export type Status = "pendiente" | "en_proceso" | "en_revision" | "finalizado";
+export type Status = "pendiente" | "en_proceso" | "en_revision" | "finalizado" | "cancelado";
 
 export interface Ticket {
   id: string;
@@ -18,6 +18,10 @@ export interface Ticket {
   fecha_finalizacion?: string | null;
   tiempo_resolucion_segundos?: number | null;
   tiempo_resolucion_texto?: string | null;
+  // Específicos órdenes de trabajo
+  tipo?: string | null;
+  company_id?: string | null;
+  evidencias?: string[] | null;
 }
 
 /** Formatea una duración en segundos a "15 min" / "2 h 14 min" / "1 d 3 h". */
@@ -59,7 +63,22 @@ export const STATUS_LABEL: Record<Status, string> = {
   en_proceso: "En proceso",
   en_revision: "En revisión",
   finalizado: "Finalizado",
+  cancelado: "Cancelado",
 };
 
 export const PRIORITIES: Priority[] = ["baja", "media", "alta", "critica"];
+/** Estados para tickets (sin "cancelado"). */
 export const STATUSES: Status[] = ["pendiente", "en_proceso", "en_revision", "finalizado"];
+/** Estados para órdenes de trabajo (incluye "cancelado"). */
+export const STATUSES_OT: Status[] = ["pendiente", "en_proceso", "en_revision", "finalizado", "cancelado"];
+
+// Tipos para órdenes de trabajo
+export const ORDEN_TIPOS = ["mantenimiento", "instalacion", "visita", "configuracion", "otro"] as const;
+export type OrdenTipo = typeof ORDEN_TIPOS[number];
+export const ORDEN_TIPO_LABEL: Record<OrdenTipo, string> = {
+  mantenimiento: "Mantenimiento",
+  instalacion: "Instalación",
+  visita: "Visita técnica",
+  configuracion: "Configuración",
+  otro: "Otro",
+};
