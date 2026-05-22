@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Priority, Status, Ticket, PRIORITY_LABEL, STATUS_LABEL, PRIORITIES, STATUSES } from "@/lib/tickets";
+import { Priority, Status, Ticket, PRIORITY_LABEL, STATUS_LABEL, PRIORITIES, STATUSES, ORDEN_TIPOS, ORDEN_TIPO_LABEL, OrdenTipo } from "@/lib/tickets";
 import { AppRole } from "@/hooks/useUserRole";
 import { ShieldCheck, Wrench, User, History, Pencil, Building2, Calendar, AlertCircle, FileText, Eye } from "lucide-react";
 import { Technician } from "@/hooks/useTechnicians";
@@ -24,6 +24,7 @@ export interface TicketFormValues {
   status: Status;
   assigned_technician: string | null;
   observations?: string | null;
+  tipo?: OrdenTipo | null;
 }
 
 interface Props {
@@ -33,6 +34,18 @@ interface Props {
   ticket?: Ticket | null;
   role: AppRole;
   technicians?: Technician[];
+  /** Tabla destino para updates internos (visto_por_*). Default: entradas. */
+  tableName?: string;
+  /** Tabla de historial. Default: ticket_history. */
+  historyTable?: string;
+  /** Campo FK del historial. Default: ticket_id. */
+  historyIdField?: string;
+  /** Estados disponibles. Default: STATUSES (tickets). */
+  statuses?: Status[];
+  /** Si es órden de trabajo, mostrar selector de "tipo". */
+  showTipo?: boolean;
+  /** Etiqueta de entidad: "ticket" | "orden de trabajo". */
+  entityLabel?: string;
 }
 
 const UNASSIGNED = "__unassigned__";
@@ -44,7 +57,20 @@ const priorityTone: Record<string, string> = {
   critica: "bg-red-500/15 text-red-400 border border-red-500/30",
 };
 
-export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technicians = [] }: Props) => {
+export const TicketDialog = ({
+  open,
+  onOpenChange,
+  onSave,
+  ticket,
+  role,
+  technicians = [],
+  tableName = "entradas",
+  historyTable = "ticket_history",
+  historyIdField = "ticket_id",
+  statuses = STATUSES,
+  showTipo = false,
+  entityLabel = "ticket",
+}: Props) => {
   const isEdit = !!ticket;
   const isSupervisor = role === "supervisor";
   const isTecnico = role === "tecnico";
