@@ -401,6 +401,25 @@ export const TicketDialog = ({
         </div>
       )}
 
+      {showTipo && !(isTecnico || (isCliente && isEdit)) && (
+        <div className="space-y-2">
+          <Label htmlFor="tipo-form">Tipo de orden</Label>
+          <Select value={tipo} onValueChange={(v) => setTipo(v as OrdenTipo)}>
+            <SelectTrigger id="tipo-form"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ORDEN_TIPOS.map((t) => <SelectItem key={t} value={t}>{ORDEN_TIPO_LABEL[t]}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      {showTipo && (isTecnico || (isCliente && isEdit)) && (ticket as any)?.tipo && (
+        <div className="space-y-1">
+          <Label className="text-muted-foreground">Tipo</Label>
+          <p className="text-sm">{ORDEN_TIPO_LABEL[((ticket as any).tipo as OrdenTipo)] ?? (ticket as any).tipo}</p>
+        </div>
+      )}
+
+
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label>Prioridad</Label>
