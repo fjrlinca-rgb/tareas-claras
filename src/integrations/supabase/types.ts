@@ -23,6 +23,7 @@ export type Database = {
           email: string | null
           id: string
           name: string
+          puede_crear_ordenes: boolean
           updated_at: string
         }
         Insert: {
@@ -33,6 +34,7 @@ export type Database = {
           email?: string | null
           id?: string
           name: string
+          puede_crear_ordenes?: boolean
           updated_at?: string
         }
         Update: {
@@ -43,6 +45,7 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string
+          puede_crear_ordenes?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -103,6 +106,116 @@ export type Database = {
           visto_por_tecnico?: boolean
         }
         Relationships: []
+      }
+      historial_ordenes: {
+        Row: {
+          action: string
+          changed_by: string | null
+          changed_by_email: string | null
+          created_at: string
+          field: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+          orden_id: string
+        }
+        Insert: {
+          action: string
+          changed_by?: string | null
+          changed_by_email?: string | null
+          created_at?: string
+          field?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          orden_id: string
+        }
+        Update: {
+          action?: string
+          changed_by?: string | null
+          changed_by_email?: string | null
+          created_at?: string
+          field?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          orden_id?: string
+        }
+        Relationships: []
+      }
+      ordenes_trabajo: {
+        Row: {
+          assigned_technician: string | null
+          company_id: string | null
+          created_at: string
+          description: string | null
+          evidencias: Json
+          fecha_finalizacion: string | null
+          fecha_inicio_revision: string | null
+          id: string
+          observations: string | null
+          priority: string
+          status: string
+          tiempo_resolucion_segundos: number | null
+          tiempo_resolucion_texto: string | null
+          tipo: string
+          title: string
+          updated_at: string
+          user_id: string
+          visto_por_supervisor: boolean
+          visto_por_tecnico: boolean
+        }
+        Insert: {
+          assigned_technician?: string | null
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          evidencias?: Json
+          fecha_finalizacion?: string | null
+          fecha_inicio_revision?: string | null
+          id?: string
+          observations?: string | null
+          priority?: string
+          status?: string
+          tiempo_resolucion_segundos?: number | null
+          tiempo_resolucion_texto?: string | null
+          tipo?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          visto_por_supervisor?: boolean
+          visto_por_tecnico?: boolean
+        }
+        Update: {
+          assigned_technician?: string | null
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          evidencias?: Json
+          fecha_finalizacion?: string | null
+          fecha_inicio_revision?: string | null
+          id?: string
+          observations?: string | null
+          priority?: string
+          status?: string
+          tiempo_resolucion_segundos?: number | null
+          tiempo_resolucion_texto?: string | null
+          tipo?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visto_por_supervisor?: boolean
+          visto_por_tecnico?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordenes_trabajo_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -356,6 +469,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      puede_crear_ordenes: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "cliente" | "supervisor" | "tecnico"
