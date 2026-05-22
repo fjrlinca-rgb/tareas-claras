@@ -328,10 +328,23 @@ export const TicketDialog = ({
               </div>
             </div>
 
+            {showTipo && (
+              <div className="space-y-2">
+                <Label htmlFor="tipo">Tipo de orden</Label>
+                <Select value={tipo} onValueChange={(v) => setTipo(v as OrdenTipo)}>
+                  <SelectTrigger id="tipo"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ORDEN_TIPOS.map((t) => <SelectItem key={t} value={t}>{ORDEN_TIPO_LABEL[t]}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="obs">Observaciones internas</Label>
               <Textarea id="obs" value={observations} onChange={(e) => setObservations(e.target.value)} rows={3} placeholder="Notas internas, diagnóstico, acciones realizadas..." />
             </div>
+
 
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cerrar</Button>
