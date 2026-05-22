@@ -150,6 +150,7 @@ export const TicketDialog = ({
     let values: TicketFormValues;
     if (isCliente) {
       values = { title: title.trim(), description: description.trim() || null, priority, status: "pendiente", assigned_technician: null };
+      if (showTipo) values.tipo = tipo;
     } else if (isTecnico) {
       values = {
         title: ticket!.title,
@@ -169,6 +170,7 @@ export const TicketDialog = ({
         assigned_technician: technician === UNASSIGNED ? null : technician,
         observations: observations.trim() || null,
       };
+      if (showTipo) values.tipo = tipo;
     } else {
       values = {
         title: title.trim(),
@@ -178,6 +180,7 @@ export const TicketDialog = ({
         assigned_technician: technician === UNASSIGNED ? null : technician,
         observations: observations.trim() || null,
       };
+      if (showTipo) values.tipo = tipo;
     }
 
     if (!values.title) { setSaving(false); return; }
