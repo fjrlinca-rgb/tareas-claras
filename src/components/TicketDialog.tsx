@@ -83,6 +83,7 @@ export const TicketDialog = ({
   const [status, setStatus] = useState<Status>("pendiente");
   const [technician, setTechnician] = useState<string>(UNASSIGNED);
   const [observations, setObservations] = useState("");
+  const [tipo, setTipo] = useState<OrdenTipo>("otro");
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState("edit");
   const [companyName, setCompanyName] = useState<string | null>(null);
@@ -96,6 +97,7 @@ export const TicketDialog = ({
       setStatus((ticket?.status as Status) ?? "pendiente");
       setTechnician(ticket?.assigned_technician ?? UNASSIGNED);
       setObservations((ticket as any)?.observations ?? "");
+      setTipo(((ticket as any)?.tipo as OrdenTipo) ?? "otro");
       setTab("edit");
       setCompanyName(null);
       setOwnerEmail(null);
