@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Priority, Status, Ticket, PRIORITY_LABEL, STATUS_LABEL, PRIORITIES, STATUSES } from "@/lib/tickets";
+import { Priority, Status, Ticket, PRIORITY_LABEL, STATUS_LABEL, PRIORITIES, STATUSES, ORDEN_TIPOS, ORDEN_TIPO_LABEL, OrdenTipo } from "@/lib/tickets";
 import { AppRole } from "@/hooks/useUserRole";
 import { ShieldCheck, Wrench, User, History, Pencil, Building2, Calendar, AlertCircle, FileText, Eye } from "lucide-react";
 import { Technician } from "@/hooks/useTechnicians";
@@ -24,6 +24,7 @@ export interface TicketFormValues {
   status: Status;
   assigned_technician: string | null;
   observations?: string | null;
+  tipo?: OrdenTipo | null;
 }
 
 interface Props {
@@ -33,6 +34,18 @@ interface Props {
   ticket?: Ticket | null;
   role: AppRole;
   technicians?: Technician[];
+  /** Tabla destino para updates internos (visto_por_*). Default: entradas. */
+  tableName?: string;
+  /** Tabla de historial. Default: ticket_history. */
+  historyTable?: string;
+  /** Campo FK del historial. Default: ticket_id. */
+  historyIdField?: string;
+  /** Estados disponibles. Default: STATUSES (tickets). */
+  statuses?: Status[];
+  /** Si es órden de trabajo, mostrar selector de "tipo". */
+  showTipo?: boolean;
+  /** Etiqueta de entidad: "ticket" | "orden de trabajo". */
+  entityLabel?: string;
 }
 
 const UNASSIGNED = "__unassigned__";
@@ -44,7 +57,20 @@ const priorityTone: Record<string, string> = {
   critica: "bg-red-500/15 text-red-400 border border-red-500/30",
 };
 
-export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technicians = [] }: Props) => {
+export const TicketDialog = ({
+  open,
+  onOpenChange,
+  onSave,
+  ticket,
+  role,
+  technicians = [],
+  tableName = "entradas",
+  historyTable = "ticket_history",
+  historyIdField = "ticket_id",
+  statuses = STATUSES,
+  showTipo = false,
+  entityLabel = "ticket",
+}: Props) => {
   const isEdit = !!ticket;
   const isSupervisor = role === "supervisor";
   const isTecnico = role === "tecnico";
@@ -57,6 +83,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
   const [status, setStatus] = useState<Status>("pendiente");
   const [technician, setTechnician] = useState<string>(UNASSIGNED);
   const [observations, setObservations] = useState("");
+  const [tipo, setTipo] = useState<OrdenTipo>("otro");
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState("edit");
   const [companyName, setCompanyName] = useState<string | null>(null);
@@ -70,6 +97,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
       setStatus((ticket?.status as Status) ?? "pendiente");
       setTechnician(ticket?.assigned_technician ?? UNASSIGNED);
       setObservations((ticket as any)?.observations ?? "");
+      setTipo(((ticket as any)?.tipo as OrdenTipo) ?? "otro");
       setTab("edit");
       setCompanyName(null);
       setOwnerEmail(null);
@@ -80,7 +108,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
   useEffect(() => {
     if (!open || !isTecnico || !ticket?.id) return;
     if ((ticket as any).visto_por_tecnico === false) {
-      supabase.from("entradas").update({ visto_por_tecnico: true }).eq("id", ticket.id).then(() => {});
+      supabase.from(tableName as any).update({ visto_por_tecnico: true }).eq("id", ticket.id).then(() => {});
     }
   }, [open, isTecnico, ticket?.id]);
 
@@ -88,7 +116,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
   useEffect(() => {
     if (!open || !isSupervisor || !ticket?.id) return;
     if ((ticket as any).visto_por_supervisor === false) {
-      supabase.from("entradas").update({ visto_por_supervisor: true }).eq("id", ticket.id).then(() => {});
+      supabase.from(tableName as any).update({ visto_por_supervisor: true }).eq("id", ticket.id).then(() => {});
     }
   }, [open, isSupervisor, ticket?.id]);
 
@@ -122,6 +150,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
     let values: TicketFormValues;
     if (isCliente) {
       values = { title: title.trim(), description: description.trim() || null, priority, status: "pendiente", assigned_technician: null };
+      if (showTipo) values.tipo = tipo;
     } else if (isTecnico) {
       values = {
         title: ticket!.title,
@@ -141,6 +170,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
         assigned_technician: technician === UNASSIGNED ? null : technician,
         observations: observations.trim() || null,
       };
+      if (showTipo) values.tipo = tipo;
     } else {
       values = {
         title: title.trim(),
@@ -150,6 +180,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
         assigned_technician: technician === UNASSIGNED ? null : technician,
         observations: observations.trim() || null,
       };
+      if (showTipo) values.tipo = tipo;
     }
 
     if (!values.title) { setSaving(false); return; }
@@ -167,8 +198,8 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
   );
 
   const titleText = isEdit
-    ? (isTecnico ? "Actualizar ticket asignado" : isCliente ? "Detalle del ticket" : "Gestionar ticket")
-    : "Crear nuevo ticket";
+    ? (isTecnico ? `Actualizar ${entityLabel} asignado` : isCliente ? `Detalle del ${entityLabel}` : `Gestionar ${entityLabel}`)
+    : `Crear nuevo ${entityLabel}`;
 
   // ============ VISTA SIMPLIFICADA SUPERVISOR (EDICIÓN) ============
   if (isEdit && isSupervisor) {
@@ -291,16 +322,29 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
                 <Select value={status} onValueChange={(v) => setStatus(v as Status)}>
                   <SelectTrigger id="status"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+                    {statuses.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
+            {showTipo && (
+              <div className="space-y-2">
+                <Label htmlFor="tipo">Tipo de orden</Label>
+                <Select value={tipo} onValueChange={(v) => setTipo(v as OrdenTipo)}>
+                  <SelectTrigger id="tipo"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ORDEN_TIPOS.map((t) => <SelectItem key={t} value={t}>{ORDEN_TIPO_LABEL[t]}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="obs">Observaciones internas</Label>
               <Textarea id="obs" value={observations} onChange={(e) => setObservations(e.target.value)} rows={3} placeholder="Notas internas, diagnóstico, acciones realizadas..." />
             </div>
+
 
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cerrar</Button>
@@ -314,7 +358,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
               <History className="h-4 w-4 text-muted-foreground" />
               <h4 className="text-sm font-semibold">Historial de cambios</h4>
             </div>
-            <TicketHistory ticketId={ticket!.id} />
+            <TicketHistory ticketId={ticket!.id} table={historyTable} idField={historyIdField} />
           </div>
         </DialogContent>
       </Dialog>
@@ -357,6 +401,25 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
         </div>
       )}
 
+      {showTipo && !(isTecnico || (isCliente && isEdit)) && (
+        <div className="space-y-2">
+          <Label htmlFor="tipo-form">Tipo de orden</Label>
+          <Select value={tipo} onValueChange={(v) => setTipo(v as OrdenTipo)}>
+            <SelectTrigger id="tipo-form"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ORDEN_TIPOS.map((t) => <SelectItem key={t} value={t}>{ORDEN_TIPO_LABEL[t]}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      {showTipo && (isTecnico || (isCliente && isEdit)) && (ticket as any)?.tipo && (
+        <div className="space-y-1">
+          <Label className="text-muted-foreground">Tipo</Label>
+          <p className="text-sm">{ORDEN_TIPO_LABEL[((ticket as any).tipo as OrdenTipo)] ?? (ticket as any).tipo}</p>
+        </div>
+      )}
+
+
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label>Prioridad</Label>
@@ -383,7 +446,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
             <Select value={status} onValueChange={(v) => setStatus(v as Status)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+                {statuses.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -469,7 +532,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
           </Button>
         )}
         {!(isCliente && isEdit) && (
-          <Button type="submit" disabled={saving}>{saving ? "Guardando..." : isEdit ? "Guardar cambios" : "Crear ticket"}</Button>
+          <Button type="submit" disabled={saving}>{saving ? "Guardando..." : isEdit ? "Guardar cambios" : `Crear ${entityLabel}`}</Button>
         )}
       </DialogFooter>
     </form>
@@ -499,7 +562,7 @@ export const TicketDialog = ({ open, onOpenChange, onSave, ticket, role, technic
             </TabsList>
             <TabsContent value="edit" className="mt-4">{formBody}</TabsContent>
             <TabsContent value="history" className="mt-4">
-              <TicketHistory ticketId={ticket!.id} />
+              <TicketHistory ticketId={ticket!.id} table={historyTable} idField={historyIdField} />
             </TabsContent>
           </Tabs>
         ) : formBody}

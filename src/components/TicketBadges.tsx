@@ -21,6 +21,15 @@ const statusClasses: Record<Status, string> = {
   en_proceso: "bg-status-proceso-soft text-status-proceso border-status-proceso/30",
   en_revision: "bg-status-revision-soft text-status-revision border-status-revision/30",
   finalizado: "bg-status-finalizado-soft text-status-finalizado border-status-finalizado/30",
+  cancelado: "bg-muted text-muted-foreground border-border",
+};
+
+const statusDot: Record<Status, string> = {
+  pendiente: "bg-status-pendiente",
+  en_proceso: "bg-status-proceso",
+  en_revision: "bg-status-revision",
+  finalizado: "bg-status-finalizado",
+  cancelado: "bg-muted-foreground",
 };
 
 export const PriorityBadge = ({ priority }: { priority: Priority }) => {
@@ -42,12 +51,7 @@ export const StatusBadge = ({ status }: { status: Status }) => {
       "inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium",
       statusClasses[status]
     )}>
-      <span className={cn("h-1.5 w-1.5 rounded-full", {
-        "bg-status-pendiente": status === "pendiente",
-        "bg-status-proceso": status === "en_proceso",
-        "bg-status-revision": status === "en_revision",
-        "bg-status-finalizado": status === "finalizado",
-      })} />
+      <span className={cn("h-1.5 w-1.5 rounded-full", statusDot[status])} />
       {STATUS_LABEL[status]}
     </span>
   );

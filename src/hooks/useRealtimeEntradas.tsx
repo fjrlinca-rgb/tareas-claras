@@ -1,18 +1,22 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export function useRealtimeEntradas(onChange: () => void) {
+/**
+ * Suscripción realtime a una tabla. Por defecto `entradas` (tickets).
+ * Para órdenes de trabajo pasar `"ordenes_trabajo"`.
+ */
+export function useRealtimeEntradas(onChange: () => void, table: string = "entradas") {
   useEffect(() => {
     const channel = supabase
-      .channel(`entradas-${Math.random().toString(36).slice(2)}`)
+      .channel(`${table}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "entradas" },
+        { event: "*", schema: "public", table },
         () => onChange()
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [onChange]);
+  }, [onChange, table]);
 }

@@ -1,74 +1,104 @@
-## Resumen
-Construir un módulo de Reportes con historial diario persistente, snapshot automático a las 23:59, KPIs, gráficas, filtros y exportación PDF/Excel.
+## Plan: Módulo "Órdenes de trabajo"
 
-## 1. Base de datos (migración)
+Crear un módulo paralelo a Tickets para gestionar tareas internas (mantenimientos, instalaciones, visitas, configuraciones), reutilizando componentes existentes mediante una capa genérica.
 
-**Tabla `reportes_diarios`**
-- `id uuid pk`, `fecha date unique not null`
-- `total_tickets, pendientes, en_revision, en_proceso, finalizados, criticos int`
-- `prioridad_baja, prioridad_media, prioridad_alta, prioridad_critica int`
-- `tickets_creados, tickets_finalizados int`
-- `tiempo_promedio_resolucion_horas numeric`
-- `tickets_por_tecnico jsonb` — `[{ email, nombre, total, finalizados }]`
-- `tickets_por_empresa jsonb` — `[{ company_id, nombre, total }]`
-- `created_at timestamptz default now()`
-- RLS: SELECT para supervisor; INSERT/UPDATE solo service_role (edge function).
+---
 
-**Función `generar_snapshot_diario(fecha_objetivo date)`**
-- Calcula agregados desde `entradas` (+ join `profiles`/`companies` para nombres).
-- `INSERT ... ON CONFLICT (fecha) DO UPDATE` para permitir re-ejecución del mismo día sin duplicar.
-- Días anteriores cerrados no se sobrescriben (la edge function solo invoca para "ayer" / "hoy").
+### 1. Base de datos (migración)
 
-## 2. Edge function `snapshot-reportes`
-- Sin auth (cron) — verify_jwt = false.
-- Llama `generar_snapshot_diario(current_date - 1)` (cierra el día anterior) y `current_date` (snapshot vivo del día).
-- Devuelve JSON con resultado.
+**Tabla `ordenes_trabajo`** — misma estructura que `entradas` + campos específicos:
+- `id`, `user_id`, `company_id` (uuid, opcional para asociar empresa explícita)
+- `title`, `description`, `observations`
+- `priority` (`baja`/`media`/`alta`/`critica`)
+- `status` (`pendiente`/`en_revision`/`en_proceso`/`finalizado`/`cancelado`)
+- `assigned_technician` (email)
+- `tipo` (`mantenimiento`/`instalacion`/`visita`/`configuracion`/`otro`)
+- `evidencias` (jsonb array de URLs)
+- `fecha_inicio_revision`, `fecha_finalizacion`
+- `tiempo_resolucion_segundos`, `tiempo_resolucion_texto`
+- `visto_por_tecnico`, `visto_por_supervisor`
+- `created_at`, `updated_at`
 
-**Cron pg_cron**: ejecuta diariamente 23:59 hora del servidor invocando la edge function vía `net.http_post`.
+**Tabla `historial_ordenes`** — espejo de `ticket_history` con `orden_id`.
 
-## 3. Frontend `src/pages/Reportes.tsx` (reescritura)
+**Configuración por empresa**: campo `puede_crear_ordenes boolean default false` en `companies` para habilitar creación por cliente.
 
-**Filtros**: Hoy / 7 días / 30 días / Mes actual / Año actual / Rango personalizado.
+**Triggers reutilizados**:
+- `ordenes_cronometro` (clon de `entradas_cronometro`)
+- `log_orden_changes` (clon de `log_entrada_changes`)
+- `reset_visto_orden_on_assign`
+- `set_updated_at`
 
-**KPIs (tarjetas)**:
-- Tickets totales del periodo
-- Finalizados / Tasa de resolución
-- Tiempo promedio de resolución (h)
-- Críticos abiertos
-- Técnico con más tickets
-- Empresa con más incidencias
-- % SLA cumplido (definido como resueltos dentro de X horas según prioridad)
+**RLS** (idéntica a `entradas`):
+- Cliente: ve sus propias órdenes; inserta solo si `companies.puede_crear_ordenes = true`
+- Técnico: ve/edita órdenes donde `assigned_technician = email`
+- Supervisor: control total
 
-**Gráficas (recharts)**:
-- Línea: tickets creados vs finalizados por día
-- Barras apiladas: estados por día
-- Barras horizontales: carga por técnico (del último snapshot)
-- Área: tendencia semanal
-- Donut: distribución por prioridad / severidad
+**Realtime**: `ALTER PUBLICATION supabase_realtime ADD TABLE ordenes_trabajo`.
 
-**Datos**:
-- Hook `useReportesDiarios(rango)` → consulta `reportes_diarios` por rango.
-- Dashboard sigue usando `entradas` en tiempo real (sin cambios).
+**Bucket storage** `ordenes-evidencias` (privado) con políticas: técnico/supervisor/cliente dueño pueden leer; técnico/supervisor pueden subir.
 
-**Exportación**:
-- Excel: `xlsx` (SheetJS) — hoja por KPI + datos crudos.
-- PDF: `jspdf` + `jspdf-autotable` con tablas y captura de KPIs.
+---
 
-## 4. Diseño
-- Dark NOC coherente con el resto (tokens semánticos de `index.css`).
-- Tarjetas KPI con barra superior por severidad (reusar `StatCard`).
-- Gráficas con colores `--status-*` y `--priority-*`.
-- Responsive grid 1/2/4 columnas.
+### 2. Refactor a componentes genéricos reutilizables
 
-## Archivos
-- Migración SQL (tabla + función + RLS + cron job)
-- `supabase/functions/snapshot-reportes/index.ts` (+ entrada en `config.toml`)
-- `src/hooks/useReportesDiarios.tsx`
-- `src/lib/reportesExport.ts` (PDF + Excel)
-- `src/pages/Reportes.tsx` (reescritura)
-- `package.json`: añadir `xlsx`, `jspdf`, `jspdf-autotable`
+Para no duplicar la UI, generalizo lo existente:
 
-## Notas técnicas
-- "Mantener historial aunque se eliminen tickets" se logra porque `reportes_diarios` guarda agregados — eliminar tickets no afecta filas pasadas.
-- SLA por defecto: crítica ≤4h, alta ≤8h, media ≤24h, baja ≤72h (ajustable).
-- El snapshot del día actual se actualiza (upsert) en cada corrida; días pasados solo se generan una vez al cierre.
+- **`src/lib/workItems.ts`** — tipo `WorkItem` común + helpers (`formatDuracion`, badges, status/priority maps) que ya existen en `tickets.ts`. `tickets.ts` re-exporta desde aquí para no romper imports.
+- **`src/components/WorkItemsTable.tsx`** — versión genérica de `TicketsTable` parametrizada por: labels, callbacks, columnas extra opcionales (p. ej. "Tipo" para órdenes). `TicketsTable` pasa a ser un wrapper delgado.
+- **`src/components/WorkItemDialog.tsx`** — versión genérica de `TicketDialog` con prop `extraFields` para el selector de **tipo** y subida de **evidencias**. `TicketDialog` queda como wrapper.
+- **`src/hooks/useRealtimeTable.tsx`** — generaliza `useRealtimeEntradas(tabla)`. `useRealtimeEntradas` lo usa internamente.
+- **`src/hooks/useUnseenWorkItems.tsx`** — versión genérica de `useUnseenTickets`/`useUnseenSupervisor` parametrizada por tabla.
+
+---
+
+### 3. Páginas y rutas
+
+- **`src/pages/Ordenes.tsx`** — equivalente a `Tickets.tsx`, consume `ordenes_trabajo`, usa los componentes genéricos.
+- **`src/App.tsx`** — añadir ruta `/ordenes`.
+- **`src/components/AppSidebar.tsx`** — nuevo item "Órdenes de trabajo" (ícono `ClipboardList`) entre Tickets y Técnicos, con badge de no vistos propio.
+
+---
+
+### 4. Dashboard
+
+En `src/pages/Dashboard.tsx` agregar 3 tarjetas para supervisor/técnico:
+- OT pendientes
+- OT en revisión
+- OT finalizadas
+
+(Carga paralela con `ordenes_trabajo`.)
+
+---
+
+### 5. Reportes
+
+`src/pages/Reportes.tsx` gana un **tab/switch** "Tickets" ↔ "Órdenes de trabajo" reutilizando la misma vista, cambiando solo la fuente de datos (`entradas` vs `ordenes_trabajo`).
+
+---
+
+### Detalles técnicos
+
+- Permisos cliente para crear OT: chequeo en RLS mediante función `puede_crear_ordenes(_user_id)` que consulta `profiles.company_id → companies.puede_crear_ordenes`.
+- Estado `cancelado` añade nueva badge gris en `TicketBadges.tsx`.
+- Evidencias: input file múltiple en el dialog, sube a `ordenes-evidencias/{orden_id}/...`, guarda URLs en `evidencias jsonb`.
+- Cronómetro y `format_duracion` SQL ya existen y se reutilizan.
+
+---
+
+### Archivos a crear/editar
+
+**Crear**
+- migración `ordenes_trabajo.sql`
+- `src/pages/Ordenes.tsx`
+- `src/components/WorkItemsTable.tsx`, `WorkItemDialog.tsx`
+- `src/lib/workItems.ts`
+- `src/hooks/useRealtimeTable.tsx`, `useUnseenWorkItems.tsx`, `useOrdenes.tsx` (si necesario)
+
+**Editar**
+- `src/App.tsx`, `src/components/AppSidebar.tsx`
+- `src/components/TicketsTable.tsx`, `TicketDialog.tsx` (wrappers)
+- `src/components/TicketBadges.tsx` (estado cancelado)
+- `src/hooks/useRealtimeEntradas.tsx`
+- `src/pages/Dashboard.tsx`, `src/pages/Reportes.tsx`
+- `src/lib/tickets.ts` (re-export)

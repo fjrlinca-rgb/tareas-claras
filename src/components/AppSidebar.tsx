@@ -1,4 +1,4 @@
-import { LayoutDashboard, Ticket, Headset, Users, BarChart3, ShieldCheck, LogOut } from "lucide-react";
+import { LayoutDashboard, Ticket, Headset, Users, BarChart3, ShieldCheck, LogOut, ClipboardList } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -17,6 +17,7 @@ type Item = { title: string; url: string; icon: any; roles: AppRole[] };
 const ALL_ITEMS: Item[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["cliente", "tecnico", "supervisor"] },
   { title: "Tickets", url: "/tickets", icon: Ticket, roles: ["cliente", "tecnico", "supervisor"] },
+  { title: "Órdenes de trabajo", url: "/ordenes", icon: ClipboardList, roles: ["cliente", "tecnico", "supervisor"] },
   { title: "Técnicos", url: "/tecnicos", icon: Users, roles: ["supervisor"] },
   { title: "Reportes", url: "/reportes", icon: BarChart3, roles: ["supervisor"] },
   { title: "Usuarios", url: "/usuarios", icon: ShieldCheck, roles: ["supervisor"] },
@@ -33,7 +34,10 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const unseenTec = useUnseenTickets();
   const unseenSup = useUnseenSupervisor();
+  const unseenTecOT = useUnseenTickets("ordenes_trabajo");
+  const unseenSupOT = useUnseenSupervisor("ordenes_trabajo");
   const unseen = primary === "supervisor" ? unseenSup : primary === "tecnico" ? unseenTec : 0;
+  const unseenOT = primary === "supervisor" ? unseenSupOT : primary === "tecnico" ? unseenTecOT : 0;
 
   const items = ALL_ITEMS.filter((i) => i.roles.includes(primary));
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
@@ -75,7 +79,7 @@ export function AppSidebar() {
                       )}>
                         <item.icon className="h-4 w-4 shrink-0" />
                         {!collapsed && <span className="text-sm font-medium flex-1">{item.title}</span>}
-                        {item.url === "/tickets" && unseen > 0 && (
+                        {((item.url === "/tickets" && unseen > 0) || (item.url === "/ordenes" && unseenOT > 0)) && (
                           <Badge
                             variant="destructive"
                             className={cn(
@@ -83,7 +87,7 @@ export function AppSidebar() {
                               collapsed && "absolute top-1 right-1 h-4 min-w-4 px-1"
                             )}
                           >
-                            {unseen > 99 ? "99+" : unseen}
+                            {(() => { const n = item.url === "/tickets" ? unseen : unseenOT; return n > 99 ? "99+" : n; })()}
                           </Badge>
                         )}
                       </NavLink>

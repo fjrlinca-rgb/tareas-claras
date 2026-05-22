@@ -22,6 +22,7 @@ const Dashboard = () => {
   const { primary: role, isSupervisor, isTecnico, isCliente } = useUserRole();
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [ordenes, setOrdenes] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -29,17 +30,19 @@ const Dashboard = () => {
   const { getName: getTechnicianName } = useTechnicianNames();
 
   const load = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("entradas")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) toast.error(error.message);
-    else setTickets((data ?? []) as Ticket[]);
+    const [tRes, oRes] = await Promise.all([
+      supabase.from("entradas").select("*").order("created_at", { ascending: false }),
+      supabase.from("ordenes_trabajo" as any).select("*").order("created_at", { ascending: false }),
+    ]);
+    if (tRes.error) toast.error(tRes.error.message);
+    else setTickets((tRes.data ?? []) as Ticket[]);
+    if (!oRes.error) setOrdenes((oRes.data ?? []) as unknown as Ticket[]);
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
   useRealtimeEntradas(load);
+  useRealtimeEntradas(load, "ordenes_trabajo");
 
   const stats = useMemo(() => {
     const finalizados = tickets.filter((t) => t.status === "finalizado");
@@ -54,8 +57,11 @@ const Dashboard = () => {
       finalizado: finalizados.length,
       critica: tickets.filter((t) => t.priority === "critica" && t.status !== "finalizado").length,
       tiempoPromedio: tiempos.length ? formatDuracion(promedioSeg) : "—",
+      ot_pendiente: ordenes.filter((o) => o.status === "pendiente").length,
+      ot_revision: ordenes.filter((o) => o.status === "en_revision").length,
+      ot_finalizado: ordenes.filter((o) => o.status === "finalizado").length,
     };
-  }, [tickets]);
+  }, [tickets, ordenes]);
 
   const recent = useMemo(() => tickets.slice(0, 6), [tickets]);
 
@@ -141,6 +147,22 @@ const Dashboard = () => {
             <StatCard label="Tiempo prom. resolución" value={stats.tiempoPromedio} icon={Timer} tone="primary" />
           )}
         </div>
+
+        {(isSupervisor || isTecnico) && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Órdenes de trabajo</h3>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/ordenes")}>
+                Ver órdenes <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              <StatCard label="OT pendientes" value={stats.ot_pendiente} icon={Clock} tone="warning" />
+              <StatCard label="OT en revisión" value={stats.ot_revision} icon={Eye} tone="review" />
+              <StatCard label="OT finalizadas" value={stats.ot_finalizado} icon={CheckCircle2} tone="success" />
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Tickets recientes</h3>
