@@ -259,7 +259,7 @@ export const TicketDialog = ({
             </div>
             {ticket!.description && (
               <div className="pt-2 border-t border-border/60">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Descripción del problema</p>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Descripción</p>
                 <p className="text-sm text-foreground/90 whitespace-pre-wrap">{ticket!.description}</p>
               </div>
             )}
@@ -397,7 +397,7 @@ export const TicketDialog = ({
         ) : null
       ) : (
         <div className="space-y-2">
-          <Label htmlFor="desc">Descripción del problema</Label>
+          <Label htmlFor="desc">Descripción</Label>
           <Textarea
             id="desc"
             value={description}
