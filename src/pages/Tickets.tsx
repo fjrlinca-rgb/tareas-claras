@@ -103,13 +103,14 @@ const TicketsPage = () => {
       // Crear: cliente fuerza pendiente y sin técnico
       const payload: any = isOnlyCliente
         ? {
+            id: draftId ?? undefined,
             title: values.title,
             description: values.description,
             priority: values.priority,
             status: "pendiente",
             user_id: user!.id,
           }
-        : { ...values, user_id: user!.id };
+        : { id: draftId ?? undefined, ...values, user_id: user!.id };
       const { error } = await supabase.from("entradas").insert(payload);
       if (error) { toast.error(error.message); return; }
       toast.success("Ticket creado");
