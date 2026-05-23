@@ -242,6 +242,8 @@ const TicketsPage = () => {
         ticket={editing}
         role={role}
         technicians={registeredTechs}
+        attachmentsParentType="ticket"
+        draftId={draftId}
       />
     </AppLayout>
   );
