@@ -130,7 +130,7 @@ export const AttachmentsField = ({ parentType, parentId, readOnly, className }: 
     if (files.length) handleFiles(files);
   }, [handleFiles, readOnly]);
 
-  const openZoom = async (att: AttachmentRow) => {
+  const openZoom = async (att: PreviewItem) => {
     if (att._url) { setZoomUrl(att._url); return; }
     const u = await signedUrl(att);
     if (u) setZoomUrl(u);
