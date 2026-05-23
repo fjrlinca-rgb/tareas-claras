@@ -353,6 +353,13 @@ export const TicketDialog = ({
               <Textarea id="obs" value={observations} onChange={(e) => setObservations(e.target.value)} rows={3} placeholder="Notas internas, diagnóstico, acciones realizadas..." />
             </div>
 
+            {attachmentsParentType && ticket?.id && (
+              <div className="space-y-2 pt-1">
+                <Label>Adjuntos</Label>
+                <AttachmentsField parentType={attachmentsParentType} parentId={ticket.id} />
+              </div>
+            )}
+
 
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cerrar</Button>
@@ -511,6 +518,17 @@ export const TicketDialog = ({
         <div className="space-y-1">
           <Label className="text-muted-foreground">Observaciones del equipo</Label>
           <p className="text-sm whitespace-pre-wrap">{(ticket as any).observations}</p>
+        </div>
+      )}
+
+      {attachmentsParentType && (ticket?.id || draftId) && (
+        <div className="space-y-2">
+          <Label>Adjuntos</Label>
+          <AttachmentsField
+            parentType={attachmentsParentType}
+            parentId={(ticket?.id ?? draftId) as string}
+            readOnly={isCliente && isEdit && !!ticket?.id ? false : false}
+          />
         </div>
       )}
 
