@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      attachments: {
+        Row: {
+          bucket: string
+          created_at: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          parent_id: string
+          parent_type: string
+          path: string
+          size_bytes: number | null
+          uploaded_by: string | null
+          uploaded_by_email: string | null
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          parent_id: string
+          parent_type: string
+          path: string
+          size_bytes?: number | null
+          uploaded_by?: string | null
+          uploaded_by_email?: string | null
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          parent_id?: string
+          parent_type?: string
+          path?: string
+          size_bytes?: number | null
+          uploaded_by?: string | null
+          uploaded_by_email?: string | null
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           active: boolean
@@ -430,6 +472,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_parent: {
+        Args: { _parent_id: string; _parent_type: string }
+        Returns: boolean
+      }
       format_duracion: { Args: { segundos: number }; Returns: string }
       generar_snapshot_diario: {
         Args: { fecha_objetivo?: string }
