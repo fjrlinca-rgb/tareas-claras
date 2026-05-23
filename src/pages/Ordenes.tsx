@@ -32,6 +32,7 @@ const OrdenesPage = () => {
   const [canCreateClient, setCanCreateClient] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Ticket | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -103,8 +104,8 @@ const OrdenesPage = () => {
 
   const isOnlyCliente = !isSupervisor && !isTecnico;
   const canCreate = isSupervisor || (isOnlyCliente && canCreateClient);
-  const openNew = () => { setEditing(null); setDialogOpen(true); };
-  const openEdit = (t: Ticket) => { setEditing(t); setDialogOpen(true); };
+  const openNew = () => { setEditing(null); setDraftId(crypto.randomUUID()); setDialogOpen(true); };
+  const openEdit = (t: Ticket) => { setEditing(t); setDraftId(null); setDialogOpen(true); };
 
   const handleSave = async (values: TicketFormValues) => {
     if (editing) {
@@ -116,6 +117,7 @@ const OrdenesPage = () => {
     } else {
       const payload: any = isOnlyCliente
         ? {
+            id: draftId ?? undefined,
             title: values.title,
             description: values.description,
             priority: values.priority,
@@ -123,7 +125,7 @@ const OrdenesPage = () => {
             tipo: values.tipo ?? "otro",
             user_id: user!.id,
           }
-        : { ...values, tipo: values.tipo ?? "otro", user_id: user!.id };
+        : { id: draftId ?? undefined, ...values, tipo: values.tipo ?? "otro", user_id: user!.id };
       const { error } = await supabase.from(TABLE as any).insert(payload);
       if (error) { toast.error(error.message); return; }
       toast.success("Orden creada");
@@ -274,6 +276,8 @@ const OrdenesPage = () => {
         statuses={STATUSES_OT}
         showTipo
         entityLabel="orden de trabajo"
+        attachmentsParentType="orden"
+        draftId={draftId}
       />
     </AppLayout>
   );

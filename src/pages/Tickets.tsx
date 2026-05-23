@@ -25,6 +25,7 @@ const TicketsPage = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Ticket | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -80,8 +81,8 @@ const TicketsPage = () => {
   );
 
   const canCreate = isCliente;
-  const openNew = () => { setEditing(null); setDialogOpen(true); };
-  const openEdit = (t: Ticket) => { setEditing(t); setDialogOpen(true); };
+  const openNew = () => { setEditing(null); setDraftId(crypto.randomUUID()); setDialogOpen(true); };
+  const openEdit = (t: Ticket) => { setEditing(t); setDraftId(null); setDialogOpen(true); };
 
   // Solo es "cliente puro" si NO es supervisor ni técnico (los supervisores
   // suelen tener también el rol auto-asignado `cliente`).
@@ -102,13 +103,14 @@ const TicketsPage = () => {
       // Crear: cliente fuerza pendiente y sin técnico
       const payload: any = isOnlyCliente
         ? {
+            id: draftId ?? undefined,
             title: values.title,
             description: values.description,
             priority: values.priority,
             status: "pendiente",
             user_id: user!.id,
           }
-        : { ...values, user_id: user!.id };
+        : { id: draftId ?? undefined, ...values, user_id: user!.id };
       const { error } = await supabase.from("entradas").insert(payload);
       if (error) { toast.error(error.message); return; }
       toast.success("Ticket creado");
@@ -240,6 +242,8 @@ const TicketsPage = () => {
         ticket={editing}
         role={role}
         technicians={registeredTechs}
+        attachmentsParentType="ticket"
+        draftId={draftId}
       />
     </AppLayout>
   );

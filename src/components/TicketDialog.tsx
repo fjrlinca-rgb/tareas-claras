@@ -13,6 +13,8 @@ import { Technician } from "@/hooks/useTechnicians";
 import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { TicketHistory } from "./TicketHistory";
 import { Cronometro } from "./Cronometro";
+import { AttachmentsField } from "./AttachmentsField";
+import { ParentType } from "@/lib/attachments";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -46,6 +48,10 @@ interface Props {
   showTipo?: boolean;
   /** Etiqueta de entidad: "ticket" | "orden de trabajo". */
   entityLabel?: string;
+  /** Tipo de parent para adjuntos. */
+  attachmentsParentType?: ParentType;
+  /** id provisional para adjuntos al crear (uuid pre-generado por el padre). */
+  draftId?: string | null;
 }
 
 const UNASSIGNED = "__unassigned__";
@@ -70,6 +76,8 @@ export const TicketDialog = ({
   statuses = STATUSES,
   showTipo = false,
   entityLabel = "ticket",
+  attachmentsParentType,
+  draftId,
 }: Props) => {
   const isEdit = !!ticket;
   const isSupervisor = role === "supervisor";
@@ -251,7 +259,7 @@ export const TicketDialog = ({
             </div>
             {ticket!.description && (
               <div className="pt-2 border-t border-border/60">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Descripción del problema</p>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Descripción</p>
                 <p className="text-sm text-foreground/90 whitespace-pre-wrap">{ticket!.description}</p>
               </div>
             )}
@@ -345,6 +353,13 @@ export const TicketDialog = ({
               <Textarea id="obs" value={observations} onChange={(e) => setObservations(e.target.value)} rows={3} placeholder="Notas internas, diagnóstico, acciones realizadas..." />
             </div>
 
+            {attachmentsParentType && ticket?.id && (
+              <div className="space-y-2 pt-1">
+                <Label>Adjuntos</Label>
+                <AttachmentsField parentType={attachmentsParentType} parentId={ticket.id} />
+              </div>
+            )}
+
 
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cerrar</Button>
@@ -389,7 +404,7 @@ export const TicketDialog = ({
         ) : null
       ) : (
         <div className="space-y-2">
-          <Label htmlFor="desc">Descripción del problema</Label>
+          <Label htmlFor="desc">Descripción</Label>
           <Textarea
             id="desc"
             value={description}
@@ -503,6 +518,17 @@ export const TicketDialog = ({
         <div className="space-y-1">
           <Label className="text-muted-foreground">Observaciones del equipo</Label>
           <p className="text-sm whitespace-pre-wrap">{(ticket as any).observations}</p>
+        </div>
+      )}
+
+      {attachmentsParentType && (ticket?.id || draftId) && (
+        <div className="space-y-2">
+          <Label>Adjuntos</Label>
+          <AttachmentsField
+            parentType={attachmentsParentType}
+            parentId={(ticket?.id ?? draftId) as string}
+            readOnly={isCliente && isEdit && !!ticket?.id ? false : false}
+          />
         </div>
       )}
 
