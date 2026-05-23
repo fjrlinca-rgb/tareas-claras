@@ -117,6 +117,7 @@ const OrdenesPage = () => {
     } else {
       const payload: any = isOnlyCliente
         ? {
+            id: draftId ?? undefined,
             title: values.title,
             description: values.description,
             priority: values.priority,
@@ -124,7 +125,7 @@ const OrdenesPage = () => {
             tipo: values.tipo ?? "otro",
             user_id: user!.id,
           }
-        : { ...values, tipo: values.tipo ?? "otro", user_id: user!.id };
+        : { id: draftId ?? undefined, ...values, tipo: values.tipo ?? "otro", user_id: user!.id };
       const { error } = await supabase.from(TABLE as any).insert(payload);
       if (error) { toast.error(error.message); return; }
       toast.success("Orden creada");
@@ -275,6 +276,8 @@ const OrdenesPage = () => {
         statuses={STATUSES_OT}
         showTipo
         entityLabel="orden de trabajo"
+        attachmentsParentType="orden"
+        draftId={draftId}
       />
     </AppLayout>
   );
