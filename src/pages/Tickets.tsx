@@ -25,6 +25,7 @@ const TicketsPage = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Ticket | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -80,8 +81,8 @@ const TicketsPage = () => {
   );
 
   const canCreate = isCliente;
-  const openNew = () => { setEditing(null); setDialogOpen(true); };
-  const openEdit = (t: Ticket) => { setEditing(t); setDialogOpen(true); };
+  const openNew = () => { setEditing(null); setDraftId(crypto.randomUUID()); setDialogOpen(true); };
+  const openEdit = (t: Ticket) => { setEditing(t); setDraftId(null); setDialogOpen(true); };
 
   // Solo es "cliente puro" si NO es supervisor ni técnico (los supervisores
   // suelen tener también el rol auto-asignado `cliente`).
