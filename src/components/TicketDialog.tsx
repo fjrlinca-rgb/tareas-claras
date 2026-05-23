@@ -13,6 +13,8 @@ import { Technician } from "@/hooks/useTechnicians";
 import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { TicketHistory } from "./TicketHistory";
 import { Cronometro } from "./Cronometro";
+import { AttachmentsField } from "./AttachmentsField";
+import { ParentType } from "@/lib/attachments";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -46,6 +48,10 @@ interface Props {
   showTipo?: boolean;
   /** Etiqueta de entidad: "ticket" | "orden de trabajo". */
   entityLabel?: string;
+  /** Tipo de parent para adjuntos. */
+  attachmentsParentType?: ParentType;
+  /** id provisional para adjuntos al crear (uuid pre-generado por el padre). */
+  draftId?: string | null;
 }
 
 const UNASSIGNED = "__unassigned__";
@@ -70,6 +76,8 @@ export const TicketDialog = ({
   statuses = STATUSES,
   showTipo = false,
   entityLabel = "ticket",
+  attachmentsParentType,
+  draftId,
 }: Props) => {
   const isEdit = !!ticket;
   const isSupervisor = role === "supervisor";
