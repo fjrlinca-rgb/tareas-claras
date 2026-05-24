@@ -93,7 +93,7 @@ const OrdenesPage = () => {
   );
 
   const isOnlyCliente = !isSupervisor && !isTecnico;
-  const canCreate = isSupervisor || (isOnlyCliente && canCreateClient);
+  const canCreate = isSupervisor || (isOnlyCliente && canAccessOrdenes);
   const openNew = () => { setEditing(null); setDraftId(crypto.randomUUID()); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDraftId(null); setDialogOpen(true); };
 
