@@ -29,9 +29,9 @@ const TABLE = "ordenes_trabajo";
 const OrdenesPage = () => {
   const { user } = useAuth();
   const { primary: role, isSupervisor, isTecnico, isCliente, loading: roleLoading } = useUserRole();
+  const { enabled: canAccessOrdenes, loading: accessLoading } = useCanCreateOrdenes();
   const [items, setItems] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [canCreateClient, setCanCreateClient] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Ticket | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
@@ -53,21 +53,9 @@ const OrdenesPage = () => {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (canAccessOrdenes) load(); }, [load, canAccessOrdenes]);
   useRealtimeEntradas(load, TABLE);
 
-  // Determinar si el cliente puede crear órdenes (depende de su empresa)
-  useEffect(() => {
-    if (!user || !isCliente || isSupervisor || isTecnico) { setCanCreateClient(false); return; }
-    (async () => {
-      const { data: prof } = await supabase
-        .from("profiles").select("company_id").eq("id", user.id).maybeSingle();
-      if (!prof?.company_id) { setCanCreateClient(false); return; }
-      const { data: comp } = await supabase
-        .from("companies").select("puede_crear_ordenes").eq("id", prof.company_id).maybeSingle();
-      setCanCreateClient(!!comp?.puede_crear_ordenes);
-    })();
-  }, [user, isCliente, isSupervisor, isTecnico]);
 
   const { technicians: registeredTechs } = useTechnicians(isSupervisor);
   const { getName: getTechnicianName } = useTechnicianNames();
