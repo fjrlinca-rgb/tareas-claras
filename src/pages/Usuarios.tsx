@@ -559,12 +559,13 @@ const UsuariosPage = () => {
                         <TableHead>Contacto</TableHead>
                         <TableHead>Correo</TableHead>
                         <TableHead className="w-[100px]">Estado</TableHead>
+                        <TableHead className="w-[180px]">Orden de trabajo</TableHead>
                         <TableHead className="w-[140px] text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {companies.length === 0 ? (
-                        <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No hay empresas registradas.</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No hay empresas registradas.</TableCell></TableRow>
                       ) : companies.map((c) => (
                         <TableRow key={c.id} className={!c.active ? "opacity-60" : ""}>
                           <TableCell>
@@ -581,6 +582,18 @@ const UsuariosPage = () => {
                             <span className={`text-xs font-medium ${c.active ? "text-status-finalizado" : "text-muted-foreground"}`}>
                               {c.active ? "Activa" : "Inactiva"}
                             </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={c.puede_crear_ordenes}
+                                onCheckedChange={() => toggleOrdenes(c)}
+                                aria-label="Habilitar Orden de trabajo"
+                              />
+                              <span className={`text-xs font-medium ${c.puede_crear_ordenes ? "text-status-finalizado" : "text-muted-foreground"}`}>
+                                {c.puede_crear_ordenes ? "Habilitada" : "Deshabilitada"}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
