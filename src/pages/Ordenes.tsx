@@ -103,7 +103,7 @@ const OrdenesPage = () => {
       if (isOnlyCliente) { delete payload.status; delete payload.assigned_technician; delete payload.observations; }
       const { error } = await supabase.from(TABLE as any).update(payload).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
-      toast.success("Orden actualizada");
+      toast.success("Orden de trabajo actualizada");
     } else {
       const payload: any = isOnlyCliente
         ? {
@@ -118,24 +118,24 @@ const OrdenesPage = () => {
         : { id: draftId ?? undefined, ...values, tipo: values.tipo ?? "otro", user_id: user!.id };
       const { error } = await supabase.from(TABLE as any).insert(payload);
       if (error) { toast.error(error.message); return; }
-      toast.success("Orden creada");
+      toast.success("Orden de trabajo creada");
     }
     await load();
   };
 
   const handleDelete = async (t: Ticket) => {
     if (!isSupervisor) return;
-    if (!confirm(`¿Eliminar la orden "${t.title}"?`)) return;
+    if (!confirm(`¿Eliminar la Orden de trabajo "${t.title}"?`)) return;
     const { error } = await supabase.from(TABLE as any).delete().eq("id", t.id);
     if (error) { toast.error(error.message); return; }
     setItems((prev) => prev.filter((x) => x.id !== t.id));
-    toast.success("Orden eliminada");
+    toast.success("Orden de trabajo eliminada");
   };
 
   const handleFinalize = async (t: Ticket) => {
     const { error } = await supabase.from(TABLE as any).update({ status: "finalizado" }).eq("id", t.id);
     if (error) { toast.error(error.message); return; }
-    toast.success("Orden finalizada");
+    toast.success("Orden de trabajo finalizada");
     await load();
   };
 
