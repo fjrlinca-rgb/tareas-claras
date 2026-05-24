@@ -5,6 +5,7 @@ import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight,
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useCanCreateOrdenes } from "@/hooks/useCanCreateOrdenes";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
