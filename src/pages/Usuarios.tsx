@@ -21,7 +21,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
-interface CompanyRow { id: string; name: string; contact: string | null; email: string | null; active: boolean; created_at: string; }
+interface CompanyRow { id: string; name: string; contact: string | null; email: string | null; active: boolean; puede_crear_ordenes: boolean; created_at: string; }
 interface ProfileRow {
   id: string; email: string | null; created_at: string;
   full_name: string | null; username: string | null; company_id: string | null; active: boolean;
