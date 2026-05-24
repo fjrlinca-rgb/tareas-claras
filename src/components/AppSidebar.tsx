@@ -39,8 +39,11 @@ export function AppSidebar() {
   const unseenSupOT = useUnseenSupervisor("ordenes_trabajo");
   const unseen = primary === "supervisor" ? unseenSup : primary === "tecnico" ? unseenTec : 0;
   const unseenOT = primary === "supervisor" ? unseenSupOT : primary === "tecnico" ? unseenTecOT : 0;
+  const { enabled: canOrdenes } = useCanCreateOrdenes();
 
-  const items = ALL_ITEMS.filter((i) => i.roles.includes(primary));
+  const items = ALL_ITEMS.filter((i) => i.roles.includes(primary)).filter(
+    (i) => i.url !== "/ordenes" || canOrdenes
+  );
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
   const handleSignOut = async () => { await signOut(); navigate("/auth"); };
 
