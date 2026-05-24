@@ -150,12 +150,12 @@ const Dashboard = () => {
           )}
         </div>
 
-        {(isSupervisor || isTecnico) && (
+        {(isSupervisor || isTecnico || canOrdenes) && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Órdenes de trabajo</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Orden de trabajo</h3>
               <Button variant="ghost" size="sm" onClick={() => navigate("/ordenes")}>
-                Ver órdenes <ArrowRight className="h-4 w-4 ml-1" />
+                Ver Orden de trabajo <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -165,6 +165,7 @@ const Dashboard = () => {
             </div>
           </div>
         )}
+
 
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Tickets recientes</h3>
