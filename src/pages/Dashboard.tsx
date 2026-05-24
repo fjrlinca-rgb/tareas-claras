@@ -22,6 +22,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { primary: role, isSupervisor, isTecnico, isCliente } = useUserRole();
   const navigate = useNavigate();
+  const { enabled: canOrdenes } = useCanCreateOrdenes();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ordenes, setOrdenes] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
