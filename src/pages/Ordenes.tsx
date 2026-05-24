@@ -140,14 +140,19 @@ const OrdenesPage = () => {
   };
 
   const roleLabel = isSupervisor
-    ? { icon: ShieldCheck, label: "Supervisor", desc: "Gestiona órdenes de trabajo: mantenimientos, instalaciones y visitas." }
+    ? { icon: ShieldCheck, label: "Supervisor", desc: "Gestiona la Orden de trabajo: mantenimientos, instalaciones y visitas." }
     : isTecnico
-      ? { icon: Wrench, label: "Técnico", desc: "Órdenes asignadas a tu cuenta. Actualiza el estado al avanzar." }
-      : { icon: User, label: "Cliente", desc: "Solicita órdenes de trabajo para tu empresa." };
+      ? { icon: Wrench, label: "Técnico", desc: "Orden de trabajo asignada a tu cuenta. Actualiza el estado al avanzar." }
+      : { icon: User, label: "Empresa", desc: "Solicita una Orden de trabajo para tu empresa." };
   const RoleIcon = roleLabel.icon;
 
+  // Bloqueo de acceso: si es cliente sin permiso, redirigir al inicio
+  if (!roleLoading && !accessLoading && !canAccessOrdenes) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
-    <AppLayout title="Órdenes de trabajo">
+    <AppLayout title="Orden de trabajo">
       <div className="space-y-6 animate-fade-in max-w-[1400px]">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
@@ -155,20 +160,16 @@ const OrdenesPage = () => {
               <ClipboardList className="h-3.5 w-3.5" />
               <RoleIcon className="h-3.5 w-3.5" /> Vista de {roleLabel.label}
             </div>
-            <h2 className="text-2xl font-semibold tracking-tight">Órdenes de trabajo</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">Orden de trabajo</h2>
             <p className="text-muted-foreground text-sm mt-1">{roleLabel.desc}</p>
           </div>
           {canCreate && (
             <Button onClick={openNew} size="lg" className="shadow-soft">
-              <Plus className="h-4 w-4 mr-1" /> Crear orden
+              <Plus className="h-4 w-4 mr-1" /> Crear Orden de trabajo
             </Button>
           )}
-          {isOnlyCliente && !canCreateClient && (
-            <p className="text-xs text-muted-foreground italic">
-              Tu empresa aún no está habilitada para crear órdenes.
-            </p>
-          )}
         </div>
+
 
         <Card className="p-4 shadow-card">
           <div className="flex flex-col md:flex-row gap-3 flex-wrap">
