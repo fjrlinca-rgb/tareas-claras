@@ -321,7 +321,7 @@ const UsuariosPage = () => {
     const [{ data: profiles }, { data: roles }, { data: cos }] = await Promise.all([
       supabase.from("profiles").select("id,email,created_at,full_name,username,company_id,active").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id,role"),
-      supabase.from("companies").select("id,name,contact,email,active,created_at").order("created_at", { ascending: false }),
+      supabase.from("companies").select("id,name,contact,email,active,puede_crear_ordenes,created_at").order("created_at", { ascending: false }),
     ]);
     const rolesBy = new Map<string, AppRole[]>();
     (roles ?? []).forEach((r: any) => {
