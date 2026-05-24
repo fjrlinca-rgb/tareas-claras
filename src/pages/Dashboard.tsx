@@ -5,6 +5,7 @@ import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight,
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useCanCreateOrdenes } from "@/hooks/useCanCreateOrdenes";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +22,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { primary: role, isSupervisor, isTecnico, isCliente } = useUserRole();
   const navigate = useNavigate();
+  const { enabled: canOrdenes } = useCanCreateOrdenes();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ordenes, setOrdenes] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,12 +150,12 @@ const Dashboard = () => {
           )}
         </div>
 
-        {(isSupervisor || isTecnico) && (
+        {(isSupervisor || isTecnico || canOrdenes) && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Órdenes de trabajo</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Orden de trabajo</h3>
               <Button variant="ghost" size="sm" onClick={() => navigate("/ordenes")}>
-                Ver órdenes <ArrowRight className="h-4 w-4 ml-1" />
+                Ver Orden de trabajo <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -163,6 +165,7 @@ const Dashboard = () => {
             </div>
           </div>
         )}
+
 
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Tickets recientes</h3>

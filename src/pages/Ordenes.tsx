@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { useRealtimeEntradas } from "@/hooks/useRealtimeEntradas";
 import { Plus, Search, ShieldCheck, Wrench, User, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useCanCreateOrdenes } from "@/hooks/useCanCreateOrdenes";
 import { AppLayout } from "@/components/AppLayout";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Button } from "@/components/ui/button";
@@ -27,9 +29,9 @@ const TABLE = "ordenes_trabajo";
 const OrdenesPage = () => {
   const { user } = useAuth();
   const { primary: role, isSupervisor, isTecnico, isCliente, loading: roleLoading } = useUserRole();
+  const { enabled: canAccessOrdenes, loading: accessLoading } = useCanCreateOrdenes();
   const [items, setItems] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [canCreateClient, setCanCreateClient] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Ticket | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
@@ -51,21 +53,9 @@ const OrdenesPage = () => {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (canAccessOrdenes) load(); }, [load, canAccessOrdenes]);
   useRealtimeEntradas(load, TABLE);
 
-  // Determinar si el cliente puede crear órdenes (depende de su empresa)
-  useEffect(() => {
-    if (!user || !isCliente || isSupervisor || isTecnico) { setCanCreateClient(false); return; }
-    (async () => {
-      const { data: prof } = await supabase
-        .from("profiles").select("company_id").eq("id", user.id).maybeSingle();
-      if (!prof?.company_id) { setCanCreateClient(false); return; }
-      const { data: comp } = await supabase
-        .from("companies").select("puede_crear_ordenes").eq("id", prof.company_id).maybeSingle();
-      setCanCreateClient(!!comp?.puede_crear_ordenes);
-    })();
-  }, [user, isCliente, isSupervisor, isTecnico]);
 
   const { technicians: registeredTechs } = useTechnicians(isSupervisor);
   const { getName: getTechnicianName } = useTechnicianNames();
@@ -103,7 +93,7 @@ const OrdenesPage = () => {
   );
 
   const isOnlyCliente = !isSupervisor && !isTecnico;
-  const canCreate = isSupervisor || (isOnlyCliente && canCreateClient);
+  const canCreate = isSupervisor || (isOnlyCliente && canAccessOrdenes);
   const openNew = () => { setEditing(null); setDraftId(crypto.randomUUID()); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDraftId(null); setDialogOpen(true); };
 
@@ -113,7 +103,7 @@ const OrdenesPage = () => {
       if (isOnlyCliente) { delete payload.status; delete payload.assigned_technician; delete payload.observations; }
       const { error } = await supabase.from(TABLE as any).update(payload).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
-      toast.success("Orden actualizada");
+      toast.success("Orden de trabajo actualizada");
     } else {
       const payload: any = isOnlyCliente
         ? {
@@ -128,36 +118,41 @@ const OrdenesPage = () => {
         : { id: draftId ?? undefined, ...values, tipo: values.tipo ?? "otro", user_id: user!.id };
       const { error } = await supabase.from(TABLE as any).insert(payload);
       if (error) { toast.error(error.message); return; }
-      toast.success("Orden creada");
+      toast.success("Orden de trabajo creada");
     }
     await load();
   };
 
   const handleDelete = async (t: Ticket) => {
     if (!isSupervisor) return;
-    if (!confirm(`¿Eliminar la orden "${t.title}"?`)) return;
+    if (!confirm(`¿Eliminar la Orden de trabajo "${t.title}"?`)) return;
     const { error } = await supabase.from(TABLE as any).delete().eq("id", t.id);
     if (error) { toast.error(error.message); return; }
     setItems((prev) => prev.filter((x) => x.id !== t.id));
-    toast.success("Orden eliminada");
+    toast.success("Orden de trabajo eliminada");
   };
 
   const handleFinalize = async (t: Ticket) => {
     const { error } = await supabase.from(TABLE as any).update({ status: "finalizado" }).eq("id", t.id);
     if (error) { toast.error(error.message); return; }
-    toast.success("Orden finalizada");
+    toast.success("Orden de trabajo finalizada");
     await load();
   };
 
   const roleLabel = isSupervisor
-    ? { icon: ShieldCheck, label: "Supervisor", desc: "Gestiona órdenes de trabajo: mantenimientos, instalaciones y visitas." }
+    ? { icon: ShieldCheck, label: "Supervisor", desc: "Gestiona la Orden de trabajo: mantenimientos, instalaciones y visitas." }
     : isTecnico
-      ? { icon: Wrench, label: "Técnico", desc: "Órdenes asignadas a tu cuenta. Actualiza el estado al avanzar." }
-      : { icon: User, label: "Cliente", desc: "Solicita órdenes de trabajo para tu empresa." };
+      ? { icon: Wrench, label: "Técnico", desc: "Orden de trabajo asignada a tu cuenta. Actualiza el estado al avanzar." }
+      : { icon: User, label: "Empresa", desc: "Solicita una Orden de trabajo para tu empresa." };
   const RoleIcon = roleLabel.icon;
 
+  // Bloqueo de acceso: si es cliente sin permiso, redirigir al inicio
+  if (!roleLoading && !accessLoading && !canAccessOrdenes) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
-    <AppLayout title="Órdenes de trabajo">
+    <AppLayout title="Orden de trabajo">
       <div className="space-y-6 animate-fade-in max-w-[1400px]">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
@@ -165,20 +160,16 @@ const OrdenesPage = () => {
               <ClipboardList className="h-3.5 w-3.5" />
               <RoleIcon className="h-3.5 w-3.5" /> Vista de {roleLabel.label}
             </div>
-            <h2 className="text-2xl font-semibold tracking-tight">Órdenes de trabajo</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">Orden de trabajo</h2>
             <p className="text-muted-foreground text-sm mt-1">{roleLabel.desc}</p>
           </div>
           {canCreate && (
             <Button onClick={openNew} size="lg" className="shadow-soft">
-              <Plus className="h-4 w-4 mr-1" /> Crear orden
+              <Plus className="h-4 w-4 mr-1" /> Crear Orden de trabajo
             </Button>
           )}
-          {isOnlyCliente && !canCreateClient && (
-            <p className="text-xs text-muted-foreground italic">
-              Tu empresa aún no está habilitada para crear órdenes.
-            </p>
-          )}
         </div>
+
 
         <Card className="p-4 shadow-card">
           <div className="flex flex-col md:flex-row gap-3 flex-wrap">

@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRole, AppRole } from "@/hooks/useUserRole";
 import { useUnseenTickets } from "@/hooks/useUnseenTickets";
 import { useUnseenSupervisor } from "@/hooks/useUnseenSupervisor";
+import { useCanCreateOrdenes } from "@/hooks/useCanCreateOrdenes";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -17,7 +18,7 @@ type Item = { title: string; url: string; icon: any; roles: AppRole[] };
 const ALL_ITEMS: Item[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["cliente", "tecnico", "supervisor"] },
   { title: "Tickets", url: "/tickets", icon: Ticket, roles: ["cliente", "tecnico", "supervisor"] },
-  { title: "Órdenes de trabajo", url: "/ordenes", icon: ClipboardList, roles: ["cliente", "tecnico", "supervisor"] },
+  { title: "Orden de trabajo", url: "/ordenes", icon: ClipboardList, roles: ["cliente", "tecnico", "supervisor"] },
   { title: "Técnicos", url: "/tecnicos", icon: Users, roles: ["supervisor"] },
   { title: "Reportes", url: "/reportes", icon: BarChart3, roles: ["supervisor"] },
   { title: "Usuarios", url: "/usuarios", icon: ShieldCheck, roles: ["supervisor"] },
@@ -38,8 +39,11 @@ export function AppSidebar() {
   const unseenSupOT = useUnseenSupervisor("ordenes_trabajo");
   const unseen = primary === "supervisor" ? unseenSup : primary === "tecnico" ? unseenTec : 0;
   const unseenOT = primary === "supervisor" ? unseenSupOT : primary === "tecnico" ? unseenTecOT : 0;
+  const { enabled: canOrdenes } = useCanCreateOrdenes();
 
-  const items = ALL_ITEMS.filter((i) => i.roles.includes(primary));
+  const items = ALL_ITEMS.filter((i) => i.roles.includes(primary)).filter(
+    (i) => i.url !== "/ordenes" || canOrdenes
+  );
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
   const handleSignOut = async () => { await signOut(); navigate("/auth"); };
 

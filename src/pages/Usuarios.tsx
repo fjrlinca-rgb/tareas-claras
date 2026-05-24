@@ -21,7 +21,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
-interface CompanyRow { id: string; name: string; contact: string | null; email: string | null; active: boolean; created_at: string; }
+interface CompanyRow { id: string; name: string; contact: string | null; email: string | null; active: boolean; puede_crear_ordenes: boolean; created_at: string; }
 interface ProfileRow {
   id: string; email: string | null; created_at: string;
   full_name: string | null; username: string | null; company_id: string | null; active: boolean;
@@ -321,7 +321,7 @@ const UsuariosPage = () => {
     const [{ data: profiles }, { data: roles }, { data: cos }] = await Promise.all([
       supabase.from("profiles").select("id,email,created_at,full_name,username,company_id,active").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id,role"),
-      supabase.from("companies").select("id,name,contact,email,active,created_at").order("created_at", { ascending: false }),
+      supabase.from("companies").select("id,name,contact,email,active,puede_crear_ordenes,created_at").order("created_at", { ascending: false }),
     ]);
     const rolesBy = new Map<string, AppRole[]>();
     (roles ?? []).forEach((r: any) => {
@@ -364,6 +364,19 @@ const UsuariosPage = () => {
     setDelCo(null);
     if (error) return toast.error(error.message);
     toast.success("Empresa eliminada"); load();
+  };
+
+  const toggleOrdenes = async (c: CompanyRow) => {
+    const next = !c.puede_crear_ordenes;
+    // Optimista
+    setCompanies((prev) => prev.map((x) => x.id === c.id ? { ...x, puede_crear_ordenes: next } : x));
+    const { error } = await supabase.from("companies").update({ puede_crear_ordenes: next }).eq("id", c.id);
+    if (error) {
+      toast.error(error.message);
+      setCompanies((prev) => prev.map((x) => x.id === c.id ? { ...x, puede_crear_ordenes: !next } : x));
+      return;
+    }
+    toast.success(next ? "Orden de trabajo habilitada" : "Orden de trabajo deshabilitada");
   };
 
   const filtered = useMemo(() => users.filter((u) => {
@@ -546,12 +559,13 @@ const UsuariosPage = () => {
                         <TableHead>Contacto</TableHead>
                         <TableHead>Correo</TableHead>
                         <TableHead className="w-[100px]">Estado</TableHead>
+                        <TableHead className="w-[180px]">Orden de trabajo</TableHead>
                         <TableHead className="w-[140px] text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {companies.length === 0 ? (
-                        <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No hay empresas registradas.</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No hay empresas registradas.</TableCell></TableRow>
                       ) : companies.map((c) => (
                         <TableRow key={c.id} className={!c.active ? "opacity-60" : ""}>
                           <TableCell>
@@ -568,6 +582,18 @@ const UsuariosPage = () => {
                             <span className={`text-xs font-medium ${c.active ? "text-status-finalizado" : "text-muted-foreground"}`}>
                               {c.active ? "Activa" : "Inactiva"}
                             </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={c.puede_crear_ordenes}
+                                onCheckedChange={() => toggleOrdenes(c)}
+                                aria-label="Habilitar Orden de trabajo"
+                              />
+                              <span className={`text-xs font-medium ${c.puede_crear_ordenes ? "text-status-finalizado" : "text-muted-foreground"}`}>
+                                {c.puede_crear_ordenes ? "Habilitada" : "Deshabilitada"}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
