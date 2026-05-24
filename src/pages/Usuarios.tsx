@@ -366,6 +366,19 @@ const UsuariosPage = () => {
     toast.success("Empresa eliminada"); load();
   };
 
+  const toggleOrdenes = async (c: CompanyRow) => {
+    const next = !c.puede_crear_ordenes;
+    // Optimista
+    setCompanies((prev) => prev.map((x) => x.id === c.id ? { ...x, puede_crear_ordenes: next } : x));
+    const { error } = await supabase.from("companies").update({ puede_crear_ordenes: next }).eq("id", c.id);
+    if (error) {
+      toast.error(error.message);
+      setCompanies((prev) => prev.map((x) => x.id === c.id ? { ...x, puede_crear_ordenes: !next } : x));
+      return;
+    }
+    toast.success(next ? "Orden de trabajo habilitada" : "Orden de trabajo deshabilitada");
+  };
+
   const filtered = useMemo(() => users.filter((u) => {
     if (filter !== "all" && u.primary !== filter) return false;
     const q = search.toLowerCase();
