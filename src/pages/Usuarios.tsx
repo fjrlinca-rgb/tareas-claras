@@ -346,14 +346,20 @@ const UsuariosPage = () => {
 
   useEffect(() => { if (isSupervisor) load(); }, [isSupervisor, load]);
 
-  const toggleActive = async (u: UserItem) => {
-    const res = await supabase.functions.invoke("admin-update-user", {
-      body: { action: "update", user_id: u.id, active: !u.active },
-    });
-    const err = (res.data as any)?.error ?? res.error?.message;
-    if (err) return toast.error(err);
-    toast.success(u.active ? "Usuario desactivado" : "Usuario activado");
-    load();
+  const toggleOrdenesForUser = async (u: UserItem) => {
+    if (!u.company_id) return toast.error("La empresa no está asignada a este usuario");
+    const next = !u.company_puede_crear_ordenes;
+    // Optimista en ambas listas
+    setUsers((prev) => prev.map((x) => x.company_id === u.company_id ? { ...x, company_puede_crear_ordenes: next } : x));
+    setCompanies((prev) => prev.map((c) => c.id === u.company_id ? { ...c, puede_crear_ordenes: next } : c));
+    const { error } = await supabase.from("companies").update({ puede_crear_ordenes: next }).eq("id", u.company_id);
+    if (error) {
+      toast.error(error.message);
+      setUsers((prev) => prev.map((x) => x.company_id === u.company_id ? { ...x, company_puede_crear_ordenes: !next } : x));
+      setCompanies((prev) => prev.map((c) => c.id === u.company_id ? { ...c, puede_crear_ordenes: !next } : c));
+      return;
+    }
+    toast.success(next ? "Orden de trabajo habilitada" : "Orden de trabajo deshabilitada");
   };
 
   const removeUser = async () => {
