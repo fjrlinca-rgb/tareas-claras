@@ -80,7 +80,7 @@ const TicketsPage = () => {
     [filtered, currentPage]
   );
 
-  const canCreate = isCliente;
+  const canCreate = isCliente || isSupervisor;
   const openNew = () => { setEditing(null); setDraftId(crypto.randomUUID()); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDraftId(null); setDialogOpen(true); };
 

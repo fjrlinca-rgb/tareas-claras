@@ -468,6 +468,40 @@ export const TicketDialog = ({
         )}
       </div>
 
+      {isSupervisor && !isEdit && (
+        <div className="space-y-2">
+          <Label htmlFor="tech-create">Técnico asignado</Label>
+          <Select value={technician} onValueChange={setTechnician}>
+            <SelectTrigger id="tech-create" className="h-auto min-h-10 py-2">
+              <SelectValue placeholder="Selecciona un técnico" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={UNASSIGNED}>Sin asignar</SelectItem>
+              {Array.isArray(technicians) && technicians.map((t) => {
+                const label = t?.name || t?.email || "—";
+                const count = t?.ticketCount ?? 0;
+                return (
+                  <SelectItem key={t.id ?? t.email} value={t.email} textValue={`${label} ${t.email}`} className="py-2">
+                    <div className="flex flex-col leading-tight">
+                      <span className="font-medium text-sm">{label}</span>
+                      <span className="text-[11px] text-muted-foreground">{t.email}</span>
+                      <span className="text-[11px] text-primary mt-0.5">
+                        {count} {count === 1 ? "ticket activo" : "tickets activos"}
+                      </span>
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+          {(!Array.isArray(technicians) || technicians.length === 0) && (
+            <p className="text-xs text-muted-foreground">
+              No hay usuarios con rol <strong>técnico</strong>. Crea o promueve uno desde <strong>Usuarios</strong>.
+            </p>
+          )}
+        </div>
+      )}
+
       {isTecnico && ticket?.assigned_technician && (
         <div className="space-y-1">
           <Label className="text-muted-foreground">Asignado a</Label>
