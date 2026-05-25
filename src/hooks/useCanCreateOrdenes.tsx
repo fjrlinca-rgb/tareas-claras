@@ -33,9 +33,9 @@ export function useCanCreateOrdenes() {
 
     // Realtime: si supervisor cambia el toggle, refrescar
     const channel = supabase
-      .channel(`companies-ordenes-${user.id}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "companies" }, () => load())
-      .subscribe();
+      .channel(`companies-ordenes-${user.id}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "companies" }, () => load());
+    channel.subscribe();
 
     return () => { active = false; supabase.removeChannel(channel); };
   }, [user, isSupervisor, isTecnico, isCliente, roleLoading]);
