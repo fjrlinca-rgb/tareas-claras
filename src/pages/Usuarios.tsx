@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ShieldCheck, Wrench, Building2, Search, Users as UsersIcon, AlertTriangle,
-  UserPlus, RefreshCw, KeyRound, Pencil, Trash2, Power, PowerOff, Plus, Briefcase,
+  UserPlus, RefreshCw, KeyRound, Pencil, Trash2, Plus, Briefcase, ClipboardList,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,7 +26,11 @@ interface ProfileRow {
   id: string; email: string | null; created_at: string;
   full_name: string | null; username: string | null; company_id: string | null; active: boolean;
 }
-interface UserItem extends ProfileRow { roles: AppRole[]; primary: AppRole; company_name?: string | null; }
+interface UserItem extends ProfileRow {
+  roles: AppRole[]; primary: AppRole;
+  company_name?: string | null;
+  company_puede_crear_ordenes?: boolean;
+}
 
 const ROLE_LABEL: Record<AppRole, string> = { cliente: "Empresa", tecnico: "Técnico", supervisor: "Supervisor" };
 const ROLE_ICON = { cliente: Building2, tecnico: Wrench, supervisor: ShieldCheck } as const;
@@ -327,24 +331,35 @@ const UsuariosPage = () => {
     (roles ?? []).forEach((r: any) => {
       const arr = rolesBy.get(r.user_id) ?? []; arr.push(r.role as AppRole); rolesBy.set(r.user_id, arr);
     });
-    const coMap = new Map((cos ?? []).map((c) => [c.id, c.name] as const));
+    const coMap = new Map((cos ?? []).map((c) => [c.id, c] as const));
     const items: UserItem[] = (profiles ?? []).map((p: any) => {
       const rs = rolesBy.get(p.id) ?? ["cliente"];
-      return { ...p, roles: rs, primary: primaryOf(rs), company_name: p.company_id ? coMap.get(p.company_id) ?? null : null };
+      const co = p.company_id ? coMap.get(p.company_id) : null;
+      return {
+        ...p, roles: rs, primary: primaryOf(rs),
+        company_name: co?.name ?? null,
+        company_puede_crear_ordenes: co?.puede_crear_ordenes ?? false,
+      };
     });
     setUsers(items); setCompanies(cos ?? []); setLoading(false);
   }, []);
 
   useEffect(() => { if (isSupervisor) load(); }, [isSupervisor, load]);
 
-  const toggleActive = async (u: UserItem) => {
-    const res = await supabase.functions.invoke("admin-update-user", {
-      body: { action: "update", user_id: u.id, active: !u.active },
-    });
-    const err = (res.data as any)?.error ?? res.error?.message;
-    if (err) return toast.error(err);
-    toast.success(u.active ? "Usuario desactivado" : "Usuario activado");
-    load();
+  const toggleOrdenesForUser = async (u: UserItem) => {
+    if (!u.company_id) return toast.error("La empresa no está asignada a este usuario");
+    const next = !u.company_puede_crear_ordenes;
+    // Optimista en ambas listas
+    setUsers((prev) => prev.map((x) => x.company_id === u.company_id ? { ...x, company_puede_crear_ordenes: next } : x));
+    setCompanies((prev) => prev.map((c) => c.id === u.company_id ? { ...c, puede_crear_ordenes: next } : c));
+    const { error } = await supabase.from("companies").update({ puede_crear_ordenes: next }).eq("id", u.company_id);
+    if (error) {
+      toast.error(error.message);
+      setUsers((prev) => prev.map((x) => x.company_id === u.company_id ? { ...x, company_puede_crear_ordenes: !next } : x));
+      setCompanies((prev) => prev.map((c) => c.id === u.company_id ? { ...c, puede_crear_ordenes: !next } : c));
+      return;
+    }
+    toast.success(next ? "Orden de trabajo habilitada" : "Orden de trabajo deshabilitada");
   };
 
   const removeUser = async () => {
@@ -486,8 +501,8 @@ const UsuariosPage = () => {
                         <TableHead>Usuario</TableHead>
                         <TableHead>Empresa</TableHead>
                         <TableHead className="w-[120px]">Rol</TableHead>
-                        <TableHead className="w-[100px]">Estado</TableHead>
-                        <TableHead className="w-[180px] text-right">Acciones</TableHead>
+                        <TableHead className="w-[200px]">Orden de trabajo</TableHead>
+                        <TableHead className="w-[140px] text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -496,6 +511,7 @@ const UsuariosPage = () => {
                       ) : filtered.map((u) => {
                         const Icon = ROLE_ICON[u.primary];
                         const isSelf = u.id === user?.id;
+                        const isEmpresa = u.primary === "cliente";
                         return (
                           <TableRow key={u.id} className={!u.active ? "opacity-60" : ""}>
                             <TableCell>
@@ -507,6 +523,7 @@ const UsuariosPage = () => {
                                   <p className="font-medium truncate">{u.full_name || u.email || "(sin datos)"}</p>
                                   <p className="text-xs text-muted-foreground truncate">
                                     {u.email}{u.username && ` · @${u.username}`}{isSelf && " · tú"}
+                                    {!u.active && " · inactivo"}
                                   </p>
                                 </div>
                               </div>
@@ -519,15 +536,28 @@ const UsuariosPage = () => {
                               </span>
                             </TableCell>
                             <TableCell>
-                              <span className={`text-xs font-medium ${u.active ? "text-status-finalizado" : "text-muted-foreground"}`}>
-                                {u.active ? "Activo" : "Inactivo"}
-                              </span>
+                              {isEmpresa ? (
+                                u.company_id ? (
+                                  <div className="flex items-center gap-2">
+                                    <Switch
+                                      checked={!!u.company_puede_crear_ordenes}
+                                      onCheckedChange={() => toggleOrdenesForUser(u)}
+                                      aria-label="Habilitar Orden de trabajo"
+                                    />
+                                    <span className={`text-xs font-medium inline-flex items-center gap-1 ${u.company_puede_crear_ordenes ? "text-status-finalizado" : "text-muted-foreground"}`}>
+                                      <ClipboardList className="h-3 w-3" />
+                                      {u.company_puede_crear_ordenes ? "Habilitada" : "Deshabilitada"}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">Sin empresa asignada</span>
+                                )
+                              ) : (
+                                <span className="text-xs text-muted-foreground">Acceso permanente</span>
+                              )}
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-1">
-                                <Button size="icon" variant="ghost" title={u.active ? "Desactivar" : "Activar"} onClick={() => toggleActive(u)} disabled={isSelf}>
-                                  {u.active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4 text-status-finalizado" />}
-                                </Button>
                                 <Button size="icon" variant="ghost" title="Editar" onClick={() => setUserDlg({ open: true, editing: u })}>
                                   <Pencil className="h-4 w-4" />
                                 </Button>
