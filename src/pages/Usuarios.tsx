@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ShieldCheck, Wrench, Building2, Search, Users as UsersIcon, AlertTriangle,
-  UserPlus, RefreshCw, KeyRound, Pencil, Trash2, Power, PowerOff, Plus, Briefcase,
+  UserPlus, RefreshCw, KeyRound, Pencil, Trash2, Plus, Briefcase, ClipboardList,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
