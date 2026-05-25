@@ -26,7 +26,11 @@ interface ProfileRow {
   id: string; email: string | null; created_at: string;
   full_name: string | null; username: string | null; company_id: string | null; active: boolean;
 }
-interface UserItem extends ProfileRow { roles: AppRole[]; primary: AppRole; company_name?: string | null; }
+interface UserItem extends ProfileRow {
+  roles: AppRole[]; primary: AppRole;
+  company_name?: string | null;
+  company_puede_crear_ordenes?: boolean;
+}
 
 const ROLE_LABEL: Record<AppRole, string> = { cliente: "Empresa", tecnico: "Técnico", supervisor: "Supervisor" };
 const ROLE_ICON = { cliente: Building2, tecnico: Wrench, supervisor: ShieldCheck } as const;
