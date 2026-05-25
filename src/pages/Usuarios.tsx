@@ -501,8 +501,8 @@ const UsuariosPage = () => {
                         <TableHead>Usuario</TableHead>
                         <TableHead>Empresa</TableHead>
                         <TableHead className="w-[120px]">Rol</TableHead>
-                        <TableHead className="w-[100px]">Estado</TableHead>
-                        <TableHead className="w-[180px] text-right">Acciones</TableHead>
+                        <TableHead className="w-[200px]">Orden de trabajo</TableHead>
+                        <TableHead className="w-[140px] text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -511,6 +511,7 @@ const UsuariosPage = () => {
                       ) : filtered.map((u) => {
                         const Icon = ROLE_ICON[u.primary];
                         const isSelf = u.id === user?.id;
+                        const isEmpresa = u.primary === "cliente";
                         return (
                           <TableRow key={u.id} className={!u.active ? "opacity-60" : ""}>
                             <TableCell>
@@ -522,6 +523,7 @@ const UsuariosPage = () => {
                                   <p className="font-medium truncate">{u.full_name || u.email || "(sin datos)"}</p>
                                   <p className="text-xs text-muted-foreground truncate">
                                     {u.email}{u.username && ` · @${u.username}`}{isSelf && " · tú"}
+                                    {!u.active && " · inactivo"}
                                   </p>
                                 </div>
                               </div>
@@ -534,15 +536,28 @@ const UsuariosPage = () => {
                               </span>
                             </TableCell>
                             <TableCell>
-                              <span className={`text-xs font-medium ${u.active ? "text-status-finalizado" : "text-muted-foreground"}`}>
-                                {u.active ? "Activo" : "Inactivo"}
-                              </span>
+                              {isEmpresa ? (
+                                u.company_id ? (
+                                  <div className="flex items-center gap-2">
+                                    <Switch
+                                      checked={!!u.company_puede_crear_ordenes}
+                                      onCheckedChange={() => toggleOrdenesForUser(u)}
+                                      aria-label="Habilitar Orden de trabajo"
+                                    />
+                                    <span className={`text-xs font-medium inline-flex items-center gap-1 ${u.company_puede_crear_ordenes ? "text-status-finalizado" : "text-muted-foreground"}`}>
+                                      <ClipboardList className="h-3 w-3" />
+                                      {u.company_puede_crear_ordenes ? "Habilitada" : "Deshabilitada"}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">Sin empresa asignada</span>
+                                )
+                              ) : (
+                                <span className="text-xs text-muted-foreground">Acceso permanente</span>
+                              )}
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-1">
-                                <Button size="icon" variant="ghost" title={u.active ? "Desactivar" : "Activar"} onClick={() => toggleActive(u)} disabled={isSelf}>
-                                  {u.active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4 text-status-finalizado" />}
-                                </Button>
                                 <Button size="icon" variant="ghost" title="Editar" onClick={() => setUserDlg({ open: true, editing: u })}>
                                   <Pencil className="h-4 w-4" />
                                 </Button>
