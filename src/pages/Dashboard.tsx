@@ -168,10 +168,15 @@ const Dashboard = () => {
                 Ver Orden de trabajo <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
               <StatCard label="OT pendientes" value={stats.ot_pendiente} icon={Clock} tone="warning" />
+              <StatCard label="OT en proceso" value={stats.ot_proceso} icon={Loader2} tone="primary" />
               <StatCard label="OT en revisión" value={stats.ot_revision} icon={Eye} tone="review" />
               <StatCard label="OT finalizadas" value={stats.ot_finalizado} icon={CheckCircle2} tone="success" />
+              <StatCard label="OT críticas activas" value={stats.ot_critica} icon={AlertOctagon} tone="destructive" />
+              {(isSupervisor || isTecnico) && (
+                <StatCard label="Tiempo prom. resolución" value={stats.ot_tiempoPromedio} icon={Timer} tone="primary" />
+              )}
             </div>
           </div>
         )}
