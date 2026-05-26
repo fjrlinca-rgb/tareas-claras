@@ -52,6 +52,13 @@ const Dashboard = () => {
       .map((t) => t.tiempo_resolucion_segundos ?? 0)
       .filter((s) => s > 0);
     const promedioSeg = tiempos.length ? Math.round(tiempos.reduce((a, b) => a + b, 0) / tiempos.length) : 0;
+
+    const otFinalizadas = ordenes.filter((o) => o.status === "finalizado");
+    const otTiempos = otFinalizadas
+      .map((o) => o.tiempo_resolucion_segundos ?? 0)
+      .filter((s) => s > 0);
+    const otPromedioSeg = otTiempos.length ? Math.round(otTiempos.reduce((a, b) => a + b, 0) / otTiempos.length) : 0;
+
     return {
       pendiente: tickets.filter((t) => t.status === "pendiente").length,
       en_proceso: tickets.filter((t) => t.status === "en_proceso").length,
@@ -59,6 +66,9 @@ const Dashboard = () => {
       finalizado: finalizados.length,
       critica: tickets.filter((t) => t.priority === "critica" && t.status !== "finalizado").length,
       tiempoPromedio: tiempos.length ? formatDuracion(promedioSeg) : "—",
+      ot_proceso: ordenes.filter((o) => o.status === "en_proceso").length,
+      ot_critica: ordenes.filter((o) => o.priority === "critica" && o.status !== "finalizado").length,
+      ot_tiempoPromedio: otTiempos.length ? formatDuracion(otPromedioSeg) : "—",
       ot_pendiente: ordenes.filter((o) => o.status === "pendiente").length,
       ot_revision: ordenes.filter((o) => o.status === "en_revision").length,
       ot_finalizado: ordenes.filter((o) => o.status === "finalizado").length,
