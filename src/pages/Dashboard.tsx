@@ -52,6 +52,13 @@ const Dashboard = () => {
       .map((t) => t.tiempo_resolucion_segundos ?? 0)
       .filter((s) => s > 0);
     const promedioSeg = tiempos.length ? Math.round(tiempos.reduce((a, b) => a + b, 0) / tiempos.length) : 0;
+
+    const otFinalizadas = ordenes.filter((o) => o.status === "finalizado");
+    const otTiempos = otFinalizadas
+      .map((o) => o.tiempo_resolucion_segundos ?? 0)
+      .filter((s) => s > 0);
+    const otPromedioSeg = otTiempos.length ? Math.round(otTiempos.reduce((a, b) => a + b, 0) / otTiempos.length) : 0;
+
     return {
       pendiente: tickets.filter((t) => t.status === "pendiente").length,
       en_proceso: tickets.filter((t) => t.status === "en_proceso").length,
@@ -59,6 +66,9 @@ const Dashboard = () => {
       finalizado: finalizados.length,
       critica: tickets.filter((t) => t.priority === "critica" && t.status !== "finalizado").length,
       tiempoPromedio: tiempos.length ? formatDuracion(promedioSeg) : "—",
+      ot_proceso: ordenes.filter((o) => o.status === "en_proceso").length,
+      ot_critica: ordenes.filter((o) => o.priority === "critica" && o.status !== "finalizado").length,
+      ot_tiempoPromedio: otTiempos.length ? formatDuracion(otPromedioSeg) : "—",
       ot_pendiente: ordenes.filter((o) => o.status === "pendiente").length,
       ot_revision: ordenes.filter((o) => o.status === "en_revision").length,
       ot_finalizado: ordenes.filter((o) => o.status === "finalizado").length,
@@ -158,10 +168,15 @@ const Dashboard = () => {
                 Ver Orden de trabajo <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
               <StatCard label="OT pendientes" value={stats.ot_pendiente} icon={Clock} tone="warning" />
+              <StatCard label="OT en proceso" value={stats.ot_proceso} icon={Loader2} tone="primary" />
               <StatCard label="OT en revisión" value={stats.ot_revision} icon={Eye} tone="review" />
               <StatCard label="OT finalizadas" value={stats.ot_finalizado} icon={CheckCircle2} tone="success" />
+              <StatCard label="OT críticas activas" value={stats.ot_critica} icon={AlertOctagon} tone="destructive" />
+              {(isSupervisor || isTecnico) && (
+                <StatCard label="Tiempo prom. resolución" value={stats.ot_tiempoPromedio} icon={Timer} tone="primary" />
+              )}
             </div>
           </div>
         )}
