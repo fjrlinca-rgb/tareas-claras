@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRealtimeEntradas } from "@/hooks/useRealtimeEntradas";
 import { useNavigate } from "react-router-dom";
-import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight, Eye, Timer } from "lucide-react";
+import { Plus, Clock, Loader2, CheckCircle2, AlertOctagon, Sparkles, ArrowRight, Eye, Timer, Activity, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -25,6 +25,7 @@ const Dashboard = () => {
   const { enabled: canOrdenes } = useCanCreateOrdenes();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ordenes, setOrdenes] = useState<Ticket[]>([]);
+  const [actividades, setActividades] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -32,19 +33,22 @@ const Dashboard = () => {
   const { getName: getTechnicianName } = useTechnicianNames();
 
   const load = useCallback(async () => {
-    const [tRes, oRes] = await Promise.all([
+    const [tRes, oRes, aRes] = await Promise.all([
       supabase.from("entradas").select("*").order("created_at", { ascending: false }),
       supabase.from("ordenes_trabajo" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("actividades_tecnicas" as any).select("*").order("created_at", { ascending: false }),
     ]);
     if (tRes.error) toast.error(tRes.error.message);
     else setTickets((tRes.data ?? []) as Ticket[]);
     if (!oRes.error) setOrdenes((oRes.data ?? []) as unknown as Ticket[]);
+    if (!aRes.error) setActividades((aRes.data ?? []) as any[]);
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
   useRealtimeEntradas(load);
   useRealtimeEntradas(load, "ordenes_trabajo");
+  useRealtimeEntradas(load, "actividades_tecnicas");
 
   const stats = useMemo(() => {
     const finalizados = tickets.filter((t) => t.status === "finalizado");
@@ -74,6 +78,21 @@ const Dashboard = () => {
       ot_finalizado: ordenes.filter((o) => o.status === "finalizado").length,
     };
   }, [tickets, ordenes]);
+
+  const actStats = useMemo(() => {
+    const today = new Date().toDateString();
+    const activas = actividades.filter((a) => a.estado === "en_curso");
+    const finalizadasHoy = actividades.filter(
+      (a) => a.estado === "finalizada" && a.fecha_fin && new Date(a.fecha_fin).toDateString() === today
+    );
+    const segHoy = finalizadasHoy.reduce((acc, a) => acc + (a.tiempo_total_segundos ?? 0), 0);
+    return {
+      activas: activas.length,
+      tecnicosTrabajando: new Set(activas.map((a) => a.tecnico_id)).size,
+      finalizadasHoy: finalizadasHoy.length,
+      horasHoy: (segHoy / 3600).toFixed(1) + "h",
+    };
+  }, [actividades]);
 
   const recent = useMemo(() => tickets.slice(0, 6), [tickets]);
 
@@ -180,6 +199,25 @@ const Dashboard = () => {
             </div>
           </div>
         )}
+
+        {(isSupervisor || isTecnico) && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Actividades técnicas</h3>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/actividades")}>
+                Ver actividades <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard label="Técnicos trabajando" value={actStats.tecnicosTrabajando} icon={Users} tone="primary" />
+              <StatCard label="Actividades activas" value={actStats.activas} icon={Activity} tone="warning" />
+              <StatCard label="Horas trabajadas hoy" value={actStats.horasHoy} icon={Timer} tone="review" />
+              <StatCard label="Finalizadas hoy" value={actStats.finalizadasHoy} icon={CheckCircle2} tone="success" />
+            </div>
+          </div>
+        )}
+
+
 
 
         <div className="flex items-center justify-between">
