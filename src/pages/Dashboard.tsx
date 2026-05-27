@@ -33,19 +33,22 @@ const Dashboard = () => {
   const { getName: getTechnicianName } = useTechnicianNames();
 
   const load = useCallback(async () => {
-    const [tRes, oRes] = await Promise.all([
+    const [tRes, oRes, aRes] = await Promise.all([
       supabase.from("entradas").select("*").order("created_at", { ascending: false }),
       supabase.from("ordenes_trabajo" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("actividades_tecnicas" as any).select("*").order("created_at", { ascending: false }),
     ]);
     if (tRes.error) toast.error(tRes.error.message);
     else setTickets((tRes.data ?? []) as Ticket[]);
     if (!oRes.error) setOrdenes((oRes.data ?? []) as unknown as Ticket[]);
+    if (!aRes.error) setActividades((aRes.data ?? []) as any[]);
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
   useRealtimeEntradas(load);
   useRealtimeEntradas(load, "ordenes_trabajo");
+  useRealtimeEntradas(load, "actividades_tecnicas");
 
   const stats = useMemo(() => {
     const finalizados = tickets.filter((t) => t.status === "finalizado");
