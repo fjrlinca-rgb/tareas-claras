@@ -19,6 +19,7 @@ const ALL_ITEMS: Item[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["cliente", "tecnico", "supervisor"] },
   { title: "Tickets", url: "/tickets", icon: Ticket, roles: ["cliente", "tecnico", "supervisor"] },
   { title: "Orden de trabajo", url: "/ordenes", icon: ClipboardList, roles: ["cliente", "tecnico", "supervisor"] },
+  { title: "Actividades", url: "/actividades", icon: Activity, roles: ["tecnico", "supervisor"] },
   { title: "Técnicos", url: "/tecnicos", icon: Users, roles: ["supervisor"] },
   { title: "Reportes", url: "/reportes", icon: BarChart3, roles: ["supervisor"] },
   { title: "Usuarios", url: "/usuarios", icon: ShieldCheck, roles: ["supervisor"] },
