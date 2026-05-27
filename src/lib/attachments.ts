@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type ParentType = "ticket" | "orden";
+export type ParentType = "ticket" | "orden" | "actividad";
 
 export interface AttachmentRow {
   id: string;
