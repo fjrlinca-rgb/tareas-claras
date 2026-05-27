@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      actividades_tecnicas: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          estado: string
+          fecha_fin: string | null
+          fecha_inicio: string
+          id: string
+          observaciones: string | null
+          tecnico_email: string | null
+          tecnico_id: string
+          tiempo_total_segundos: number | null
+          tiempo_total_texto: string | null
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string | null
+          estado?: string
+          fecha_fin?: string | null
+          fecha_inicio?: string
+          id?: string
+          observaciones?: string | null
+          tecnico_email?: string | null
+          tecnico_id: string
+          tiempo_total_segundos?: number | null
+          tiempo_total_texto?: string | null
+          tipo?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          estado?: string
+          fecha_fin?: string | null
+          fecha_inicio?: string
+          id?: string
+          observaciones?: string | null
+          tecnico_email?: string | null
+          tecnico_id?: string
+          tiempo_total_segundos?: number | null
+          tiempo_total_texto?: string | null
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       attachments: {
         Row: {
           bucket: string
