@@ -1,4 +1,4 @@
-import { LayoutDashboard, Ticket, Headset, Users, BarChart3, ShieldCheck, LogOut, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Ticket, Headset, Users, BarChart3, ShieldCheck, LogOut, ClipboardList, Activity } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
