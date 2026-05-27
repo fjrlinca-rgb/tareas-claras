@@ -8,6 +8,7 @@ import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import Tickets from "./pages/Tickets.tsx";
 import Ordenes from "./pages/Ordenes.tsx";
+import Actividades from "./pages/Actividades.tsx";
 import Tecnicos from "./pages/Tecnicos.tsx";
 import Reportes from "./pages/Reportes.tsx";
 import Usuarios from "./pages/Usuarios.tsx";
