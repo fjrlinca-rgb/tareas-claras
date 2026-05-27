@@ -35,7 +35,9 @@ export const ALLOWED_MIMES = new Set([
 ]);
 
 export function bucketFor(parentType: ParentType): string {
-  return parentType === "ticket" ? "tickets-files" : "ordenes-files";
+  if (parentType === "ticket") return "tickets-files";
+  if (parentType === "orden") return "ordenes-files";
+  return "actividades-files";
 }
 
 export function isAllowedFile(file: File): boolean {
