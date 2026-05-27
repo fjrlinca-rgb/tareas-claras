@@ -79,6 +79,21 @@ const Dashboard = () => {
     };
   }, [tickets, ordenes]);
 
+  const actStats = useMemo(() => {
+    const today = new Date().toDateString();
+    const activas = actividades.filter((a) => a.estado === "en_curso");
+    const finalizadasHoy = actividades.filter(
+      (a) => a.estado === "finalizada" && a.fecha_fin && new Date(a.fecha_fin).toDateString() === today
+    );
+    const segHoy = finalizadasHoy.reduce((acc, a) => acc + (a.tiempo_total_segundos ?? 0), 0);
+    return {
+      activas: activas.length,
+      tecnicosTrabajando: new Set(activas.map((a) => a.tecnico_id)).size,
+      finalizadasHoy: finalizadasHoy.length,
+      horasHoy: (segHoy / 3600).toFixed(1) + "h",
+    };
+  }, [actividades]);
+
   const recent = useMemo(() => tickets.slice(0, 6), [tickets]);
 
   const openNew = () => { setEditing(null); setDialogOpen(true); };
