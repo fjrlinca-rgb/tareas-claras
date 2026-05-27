@@ -25,6 +25,7 @@ const Dashboard = () => {
   const { enabled: canOrdenes } = useCanCreateOrdenes();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ordenes, setOrdenes] = useState<Ticket[]>([]);
+  const [actividades, setActividades] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
