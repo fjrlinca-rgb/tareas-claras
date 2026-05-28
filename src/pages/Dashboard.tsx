@@ -168,15 +168,12 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard label="Pendientes" value={stats.pendiente} icon={Clock} tone="warning" />
           <StatCard label="En proceso" value={stats.en_proceso} icon={Loader2} tone="primary" />
           <StatCard label="En revisión" value={stats.en_revision} icon={Eye} tone="review" />
           <StatCard label="Finalizados" value={stats.finalizado} icon={CheckCircle2} tone="success" />
           <StatCard label="Críticos activos" value={stats.critica} icon={AlertOctagon} tone="destructive" />
-          {(isSupervisor || isTecnico) && (
-            <StatCard label="Tiempo prom. resolución" value={stats.tiempoPromedio} icon={Timer} tone="primary" />
-          )}
         </div>
 
         {(isSupervisor || isTecnico || canOrdenes) && (
@@ -187,15 +184,12 @@ const Dashboard = () => {
                 Ver Orden de trabajo <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <StatCard label="OT pendientes" value={stats.ot_pendiente} icon={Clock} tone="warning" />
               <StatCard label="OT en proceso" value={stats.ot_proceso} icon={Loader2} tone="primary" />
               <StatCard label="OT en revisión" value={stats.ot_revision} icon={Eye} tone="review" />
               <StatCard label="OT finalizadas" value={stats.ot_finalizado} icon={CheckCircle2} tone="success" />
               <StatCard label="OT críticas activas" value={stats.ot_critica} icon={AlertOctagon} tone="destructive" />
-              {(isSupervisor || isTecnico) && (
-                <StatCard label="Tiempo prom. resolución" value={stats.ot_tiempoPromedio} icon={Timer} tone="primary" />
-              )}
             </div>
           </div>
         )}
@@ -217,41 +211,8 @@ const Dashboard = () => {
           </div>
         )}
 
-
-
-
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Tickets recientes</h3>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/tickets")}>
-            Ver todos <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
-
-        {loading ? (
+        {loading && (
           <div className="space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
-        ) : recent.length === 0 ? (
-          <Card className="p-12 text-center shadow-card">
-            <p className="text-muted-foreground mb-4">Aún no hay tickets registrados.</p>
-            <div className="flex justify-center gap-2">
-              {isSupervisor && (
-                <Button onClick={handleSeed} variant="outline" disabled={seeding}>
-                  <Sparkles className="h-4 w-4 mr-1" /> Cargar datos demo
-                </Button>
-              )}
-              <Button variant="outline" onClick={() => navigate("/tickets")}>
-                Ir a tickets <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-          </Card>
-        ) : (
-          <TicketsTable
-            tickets={recent}
-            role={role}
-            onEdit={openEdit}
-            onDelete={isSupervisor ? handleDelete : undefined}
-            onFinalize={isSupervisor || isTecnico ? handleFinalize : undefined}
-            getTechnicianName={getTechnicianName}
-          />
         )}
       </div>
 
