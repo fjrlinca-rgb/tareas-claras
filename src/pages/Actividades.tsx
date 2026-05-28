@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -19,8 +19,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { AttachmentsField } from "@/components/AttachmentsField";
-import { StatCard } from "@/components/StatCard";
-import { Plus, PlayCircle, CheckCircle2, Clock, Activity, Users, Timer, Trash2 } from "lucide-react";
+import { Plus, PlayCircle, CheckCircle2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -97,21 +96,6 @@ const Actividades = () => {
     return () => { supabase.removeChannel(ch); };
   }, [load]);
 
-  const stats = useMemo(() => {
-    const today = new Date().toDateString();
-    const activas = items.filter((a) => a.estado === "en_curso");
-    const finalizadasHoy = items.filter(
-      (a) => a.estado === "finalizada" && a.fecha_fin && new Date(a.fecha_fin).toDateString() === today
-    );
-    const tecnicosTrabajando = new Set(activas.map((a) => a.tecnico_id)).size;
-    const segHoy = finalizadasHoy.reduce((acc, a) => acc + (a.tiempo_total_segundos ?? 0), 0);
-    return {
-      activas: activas.length,
-      finalizadasHoy: finalizadasHoy.length,
-      tecnicosTrabajando,
-      horasHoy: (segHoy / 3600).toFixed(1) + "h",
-    };
-  }, [items]);
 
   const canCreate = isTecnico;
 
@@ -174,13 +158,6 @@ const Actividades = () => {
               <Plus className="h-4 w-4 mr-1" /> Nueva actividad
             </Button>
           )}
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Técnicos trabajando" value={stats.tecnicosTrabajando} icon={Users} tone="primary" />
-          <StatCard label="Actividades activas" value={stats.activas} icon={Activity} tone="warning" />
-          <StatCard label="Horas trabajadas hoy" value={stats.horasHoy} icon={Timer} tone="review" />
-          <StatCard label="Finalizadas hoy" value={stats.finalizadasHoy} icon={CheckCircle2} tone="success" />
         </div>
 
         <Card className="overflow-hidden">
