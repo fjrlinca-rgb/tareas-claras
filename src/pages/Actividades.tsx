@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -19,8 +19,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { AttachmentsField } from "@/components/AttachmentsField";
-import { StatCard } from "@/components/StatCard";
-import { Plus, PlayCircle, CheckCircle2, Clock, Activity, Users, Timer, Trash2 } from "lucide-react";
+import { Plus, PlayCircle, CheckCircle2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
