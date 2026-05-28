@@ -139,9 +139,22 @@ export const AttachmentsField = ({ parentType, parentId, readOnly, className }: 
   const handleDownload = async (att: AttachmentRow) => {
     const u = await signedUrl(att, 120);
     if (!u) { toast.error("No se pudo obtener el archivo"); return; }
-    const a = document.createElement("a");
-    a.href = u; a.download = att.file_name; a.target = "_blank";
-    document.body.appendChild(a); a.click(); a.remove();
+    try {
+      const res = await fetch(u);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = att.file_name;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 4000);
+    } catch (e: any) {
+      toast.error(`No se pudo descargar: ${e.message ?? e}`);
+    }
   };
 
   const handleDelete = async (att: AttachmentRow) => {
