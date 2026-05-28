@@ -97,21 +97,6 @@ const Actividades = () => {
     return () => { supabase.removeChannel(ch); };
   }, [load]);
 
-  const stats = useMemo(() => {
-    const today = new Date().toDateString();
-    const activas = items.filter((a) => a.estado === "en_curso");
-    const finalizadasHoy = items.filter(
-      (a) => a.estado === "finalizada" && a.fecha_fin && new Date(a.fecha_fin).toDateString() === today
-    );
-    const tecnicosTrabajando = new Set(activas.map((a) => a.tecnico_id)).size;
-    const segHoy = finalizadasHoy.reduce((acc, a) => acc + (a.tiempo_total_segundos ?? 0), 0);
-    return {
-      activas: activas.length,
-      finalizadasHoy: finalizadasHoy.length,
-      tecnicosTrabajando,
-      horasHoy: (segHoy / 3600).toFixed(1) + "h",
-    };
-  }, [items]);
 
   const canCreate = isTecnico;
 
