@@ -202,7 +202,7 @@ const Dashboard = () => {
                 Ver actividades <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <StatCard label="Técnicos trabajando" value={actStats.tecnicosTrabajando} icon={Users} tone="primary" />
               <StatCard label="Actividades activas" value={actStats.activas} icon={Activity} tone="warning" />
               <StatCard label="Horas trabajadas hoy" value={actStats.horasHoy} icon={Timer} tone="review" />
