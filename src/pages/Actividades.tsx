@@ -176,13 +176,6 @@ const Actividades = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Técnicos trabajando" value={stats.tecnicosTrabajando} icon={Users} tone="primary" />
-          <StatCard label="Actividades activas" value={stats.activas} icon={Activity} tone="warning" />
-          <StatCard label="Horas trabajadas hoy" value={stats.horasHoy} icon={Timer} tone="review" />
-          <StatCard label="Finalizadas hoy" value={stats.finalizadasHoy} icon={CheckCircle2} tone="success" />
-        </div>
-
         <Card className="overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/30">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
