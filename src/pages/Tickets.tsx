@@ -17,6 +17,7 @@ import { useTechnicians } from "@/hooks/useTechnicians";
 import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { Ticket, PRIORITIES, STATUSES, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/tickets";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 
 const TicketsPage = () => {
   const { user } = useAuth();
