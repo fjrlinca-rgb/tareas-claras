@@ -69,7 +69,7 @@ export async function uploadAttachment(
 ): Promise<AttachmentRow> {
   const bucket = bucketFor(parentType);
   const safe = sanitizeFilename(file.name);
-  const path = `${parentId}/${crypto.randomUUID()}-${safe}`;
+  const path = `${parentId}/${uuidv4()}-${safe}`;
   const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, {
     contentType: file.type || "application/octet-stream",
     upsert: false,
