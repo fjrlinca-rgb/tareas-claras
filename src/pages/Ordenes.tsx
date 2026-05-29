@@ -95,7 +95,7 @@ const OrdenesPage = () => {
 
   const isOnlyCliente = !isSupervisor && !isTecnico;
   const canCreate = isSupervisor || (isOnlyCliente && canAccessOrdenes);
-  const openNew = () => { setEditing(null); setDraftId(crypto.randomUUID()); setDialogOpen(true); };
+  const openNew = () => { setEditing(null); setDraftId(uuidv4()); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDraftId(null); setDialogOpen(true); };
 
   const handleSave = async (values: TicketFormValues) => {
