@@ -82,7 +82,7 @@ const TicketsPage = () => {
   );
 
   const canCreate = isCliente || isSupervisor;
-  const openNew = () => { setEditing(null); setDraftId(crypto.randomUUID()); setDialogOpen(true); };
+  const openNew = () => { setEditing(null); setDraftId(uuidv4()); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDraftId(null); setDialogOpen(true); };
 
   // Solo es "cliente puro" si NO es supervisor ni técnico (los supervisores
