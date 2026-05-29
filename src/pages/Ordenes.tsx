@@ -23,6 +23,7 @@ import {
   ORDEN_TIPOS, ORDEN_TIPO_LABEL,
 } from "@/lib/tickets";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 
 const TABLE = "ordenes_trabajo";
 
@@ -94,7 +95,7 @@ const OrdenesPage = () => {
 
   const isOnlyCliente = !isSupervisor && !isTecnico;
   const canCreate = isSupervisor || (isOnlyCliente && canAccessOrdenes);
-  const openNew = () => { setEditing(null); setDraftId(crypto.randomUUID()); setDialogOpen(true); };
+  const openNew = () => { setEditing(null); setDraftId(uuidv4()); setDialogOpen(true); };
   const openEdit = (t: Ticket) => { setEditing(t); setDraftId(null); setDialogOpen(true); };
 
   const handleSave = async (values: TicketFormValues) => {
