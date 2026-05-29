@@ -194,22 +194,6 @@ const Dashboard = () => {
           </div>
         )}
 
-        {(isSupervisor || isTecnico) && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Actividades técnicas</h3>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/actividades")}>
-                Ver actividades <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <StatCard label="Técnicos trabajando" value={actStats.tecnicosTrabajando} icon={Users} tone="primary" />
-              <StatCard label="Actividades activas" value={actStats.activas} icon={Activity} tone="warning" />
-              <StatCard label="Horas trabajadas hoy" value={actStats.horasHoy} icon={Timer} tone="review" />
-              <StatCard label="Finalizadas hoy" value={actStats.finalizadasHoy} icon={CheckCircle2} tone="success" />
-            </div>
-          </div>
-        )}
 
         {loading && (
           <div className="space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
