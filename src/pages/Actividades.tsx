@@ -190,7 +190,20 @@ const Actividades = () => {
                   <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Sin actividades registradas.</TableCell></TableRow>
                 ) : items.map((a) => (
                   <TableRow key={a.id} className="cursor-pointer" onClick={() => setDetail(a)}>
-                    {isSupervisor && <TableCell className="text-xs">{a.tecnico_email ?? "—"}</TableCell>}
+                    {isSupervisor && (
+                      <TableCell className="text-xs">
+                        {a.tecnico_email ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm text-foreground">
+                              {getName(a.tecnico_email) ?? a.tecnico_email}
+                            </span>
+                            {getName(a.tecnico_email) && (
+                              <span className="text-[11px] text-muted-foreground">{a.tecnico_email}</span>
+                            )}
+                          </div>
+                        ) : "—"}
+                      </TableCell>
+                    )}
                     <TableCell className="font-medium">{a.titulo}</TableCell>
                     <TableCell><Badge variant="outline">{TIPO_LABEL[a.tipo] ?? a.tipo}</Badge></TableCell>
                     <TableCell className="text-xs tabular-nums">{fmtHora(a.fecha_inicio)}</TableCell>
