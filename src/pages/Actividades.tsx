@@ -70,6 +70,7 @@ function formatDuracion(seg: number): string {
 const Actividades = () => {
   const { user } = useAuth();
   const { isSupervisor, isTecnico } = useUserRole();
+  const { getName } = useTechnicianNames();
   const [items, setItems] = useState<Actividad[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
