@@ -19,6 +19,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { AttachmentsField } from "@/components/AttachmentsField";
+import { useTechnicianNames } from "@/hooks/useTechnicianNames";
 import { Plus, PlayCircle, CheckCircle2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
