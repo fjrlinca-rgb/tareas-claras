@@ -10,18 +10,38 @@ import { toast } from "sonner";
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success("Bienvenido a HelpDesk NetExpert");
-    navigate("/");
+    try {
+      const id = username.trim();
+      if (!id) { setLoading(false); return toast.error("Ingrese su usuario"); }
+
+      let email = id;
+      if (!id.includes("@")) {
+        const { data, error } = await supabase.functions.invoke("resolve-username", {
+          body: { username: id },
+        });
+        if (error || !data?.email) {
+          setLoading(false);
+          return toast.error(data?.error || error?.message || "Usuario no encontrado");
+        }
+        email = data.email;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      setLoading(false);
+      if (error) return toast.error("Usuario o contraseña incorrectos");
+      toast.success("Bienvenido a HelpDesk NetExpert");
+      navigate("/");
+    } catch (err: any) {
+      setLoading(false);
+      toast.error(err?.message || "Error al iniciar sesión");
+    }
   };
 
   return (
