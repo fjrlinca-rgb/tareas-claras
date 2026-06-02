@@ -101,18 +101,19 @@ const Auth = () => {
 
           <form onSubmit={handleSignIn} className="mt-8 space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[10px] font-mono uppercase tracking-[0.25em] text-cyan-300/70">
+              <Label htmlFor="username" className="text-[10px] font-mono uppercase tracking-[0.25em] text-cyan-300/70">
                 Usuario
               </Label>
               <div className="relative group">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-cyan-300/60 group-focus-within:text-cyan-300 transition-colors" />
                 <Input
-                  id="email"
-                  type="email"
+                  id="username"
+                  type="text"
+                  autoComplete="username"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="usuario@empresa.com"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Ingrese su usuario"
                   className="pl-10 h-12 bg-[hsl(222_40%_10%/0.7)] border-cyan-400/20 text-slate-100 placeholder:text-slate-500 focus-visible:border-cyan-400/70 focus-visible:ring-cyan-400/30"
                 />
               </div>
