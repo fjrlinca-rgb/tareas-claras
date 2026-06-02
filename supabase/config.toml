@@ -1,1 +1,4 @@
 project_id = "ksdsvrriimuignuwhtqy"
+
+[functions.resolve-username]
+verify_jwt = false
