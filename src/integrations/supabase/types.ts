@@ -236,6 +236,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          finalized_at: string
+          id: string
+          kind: string
+          message: string
+          parent_id: string
+          read: boolean
+          technician_email: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          finalized_at?: string
+          id?: string
+          kind: string
+          message: string
+          parent_id: string
+          read?: boolean
+          technician_email?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          finalized_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          parent_id?: string
+          read?: boolean
+          technician_email?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ordenes_trabajo: {
         Row: {
           assigned_technician: string | null
