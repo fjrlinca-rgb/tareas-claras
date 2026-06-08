@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 export const AppLayout = ({ children, title }: { children: ReactNode; title: string }) => {
   return (
@@ -14,7 +15,10 @@ export const AppLayout = ({ children, title }: { children: ReactNode; title: str
               <SidebarTrigger />
               <h1 className="text-base font-semibold">{title}</h1>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-1">
+              <NotificationsBell />
+              <ThemeToggle />
+            </div>
           </header>
           <main className="flex-1 p-6 overflow-auto">{children}</main>
         </div>
