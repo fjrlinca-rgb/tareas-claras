@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser((session as Session)?.user ?? null);
       setLoading(false);
     });
-    return () => subscription.unsubscribe();
+    return () => { subscription.unsubscribe(); };
   }, []);
 
   const signOut = async () => { await supabase.auth.signOut(); };

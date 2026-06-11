@@ -132,7 +132,7 @@ const auth = {
 
 type Filter = { col: string; op: string; value: any };
 
-class QueryBuilder<T = any> implements PromiseLike<{ data: T; error: any; count: number | null }> {
+class QueryBuilder implements PromiseLike<{ data: any; error: any; count: number | null }> {
   private mode: "select" | "insert" | "update" | "delete" = "select";
   private filters: Filter[] = [];
   private selectCols = "*";
@@ -192,8 +192,8 @@ class QueryBuilder<T = any> implements PromiseLike<{ data: T; error: any; count:
   maybeSingle() { this.singleMode = "maybeSingle"; return this; }
 
   // ---- thenable -------------------------------------------------------
-  then<TResult1 = { data: T; error: any; count: number | null }, TResult2 = never>(
-    onfulfilled?: ((value: { data: T; error: any; count: number | null }) => TResult1 | PromiseLike<TResult1>) | null,
+  then<TResult1 = { data: any; error: any; count: number | null }, TResult2 = never>(
+    onfulfilled?: ((value: { data: any; error: any; count: number | null }) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
   ): PromiseLike<TResult1 | TResult2> {
     return this.run().then(onfulfilled as any, onrejected as any) as PromiseLike<TResult1 | TResult2>;
