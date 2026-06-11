@@ -402,7 +402,7 @@ async function rpc(fn: string, args: any = {}) {
 // Export
 // ---------------------------------------------------------------------------
 
-export const supabase = {
+export const supabase: any = {
   auth,
   from,
   channel,
