@@ -1,6 +1,9 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+
+// Minimal session/user types compatible with previous Supabase shape.
+type User = { id: string; email: string; user_metadata?: Record<string, any> };
+type Session = { user: User; access_token: string };
 
 interface AuthCtx {
   user: User | null;
@@ -18,12 +21,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
+      setSession((s as Session) ?? null);
+      setUser((s as Session)?.user ?? null);
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      setSession((session as Session) ?? null);
+      setUser((session as Session)?.user ?? null);
       setLoading(false);
     });
     return () => subscription.unsubscribe();
