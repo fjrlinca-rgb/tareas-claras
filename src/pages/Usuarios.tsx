@@ -331,7 +331,7 @@ const UsuariosPage = () => {
     (roles ?? []).forEach((r: any) => {
       const arr = rolesBy.get(r.user_id) ?? []; arr.push(r.role as AppRole); rolesBy.set(r.user_id, arr);
     });
-    const coMap = new Map((cos ?? []).map((c) => [c.id, c] as const));
+    const coMap = new Map<string, any>((cos ?? []).map((c: any) => [c.id, c] as const));
     const items: UserItem[] = (profiles ?? []).map((p: any) => {
       const rs = rolesBy.get(p.id) ?? ["cliente"];
       const co = p.company_id ? coMap.get(p.company_id) : null;
