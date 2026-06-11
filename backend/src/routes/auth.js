@@ -27,7 +27,10 @@ router.post("/login", loginLimiter, async (req, res) => {
   const { usuario, password } = parsed.data;
 
   const { rows } = await pool.query(
-    "SELECT id, usuario, nombre, correo, rol, activo, password_hash FROM usuarios WHERE LOWER(usuario) = LOWER($1) LIMIT 1",
+    `SELECT id, usuario, nombre, correo, rol, activo, password_hash
+       FROM usuarios
+      WHERE LOWER(usuario) = LOWER($1) OR LOWER(correo) = LOWER($1)
+      LIMIT 1`,
     [usuario]
   );
   const u = rows[0];
