@@ -1,4 +1,3 @@
-import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
 
 export type ParentType = "ticket" | "orden" | "actividad";
@@ -17,7 +16,7 @@ export interface AttachmentRow {
   created_at: string;
 }
 
-export const MAX_FILE_BYTES = 20 * 1024 * 1024; // 20 MB
+export const MAX_FILE_BYTES = 20 * 1024 * 1024;
 
 export const ALLOWED_EXT = [
   "jpg","jpeg","png","webp","gif",
@@ -34,6 +33,9 @@ export const ALLOWED_MIMES = new Set([
   "application/zip",
   "application/x-zip-compressed",
 ]);
+
+const API_URL =
+  (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:3001";
 
 export function bucketFor(parentType: ParentType): string {
   if (parentType === "ticket") return "tickets-files";
@@ -60,52 +62,43 @@ export function sanitizeFilename(name: string): string {
   return name.replace(/[^\w.\-]+/g, "_").slice(-120);
 }
 
+// Note: userId / userEmail are now resolved server-side from the session.
 export async function uploadAttachment(
   file: File,
   parentType: ParentType,
   parentId: string,
-  userId: string,
-  userEmail: string | null
+  _userId: string,
+  _userEmail: string | null
 ): Promise<AttachmentRow> {
-  const bucket = bucketFor(parentType);
-  const safe = sanitizeFilename(file.name);
-  const path = `${parentId}/${uuidv4()}-${safe}`;
-  const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, {
-    contentType: file.type || "application/octet-stream",
-    upsert: false,
-  });
-  if (upErr) throw upErr;
+  const fd = new FormData();
+  fd.append("file", file, sanitizeFilename(file.name));
+  fd.append("parent_type", parentType);
+  fd.append("parent_id", parentId);
+  // keep unused vars referenced for backwards compat
+  void uuidv4; void _userId; void _userEmail;
 
-  const { data, error } = await supabase
-    .from("attachments")
-    .insert({
-      parent_type: parentType,
-      parent_id: parentId,
-      bucket,
-      path,
-      file_name: file.name,
-      mime_type: file.type || null,
-      size_bytes: file.size,
-      uploaded_by: userId,
-      uploaded_by_email: userEmail,
-    })
-    .select("*")
-    .single();
-  if (error) {
-    await supabase.storage.from(bucket).remove([path]);
-    throw error;
+  const res = await fetch(`${API_URL}/api/uploads`, {
+    method: "POST",
+    credentials: "include",
+    body: fd,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error ?? "Error subiendo archivo");
   }
-  return data as AttachmentRow;
+  return (await res.json()) as AttachmentRow;
 }
 
 export async function deleteAttachment(att: AttachmentRow): Promise<void> {
-  await supabase.storage.from(att.bucket).remove([att.path]);
-  await supabase.from("attachments").delete().eq("id", att.id);
+  await fetch(`${API_URL}/api/uploads/${att.id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
 }
 
-export async function signedUrl(att: AttachmentRow, expiresIn = 3600): Promise<string | null> {
-  const { data } = await supabase.storage.from(att.bucket).createSignedUrl(att.path, expiresIn);
-  return data?.signedUrl ?? null;
+export async function signedUrl(att: AttachmentRow, _expiresIn = 3600): Promise<string | null> {
+  // Backend serves protected files at /api/uploads/:id (session-authenticated).
+  return `${API_URL}/api/uploads/${att.id}`;
 }
 
 export function isImage(att: { mime_type?: string | null; file_name?: string }): boolean {

@@ -219,9 +219,9 @@ const Reportes = () => {
       ? await supabase.from("companies").select("id, name").in("id", companyIds)
       : { data: [] as any[] };
 
-    const profById = new Map((profs ?? []).map((p: any) => [p.id, p]));
-    const compById = new Map((comps ?? []).map((c: any) => [c.id, c.name]));
-    const tecByEmail = new Map((techProfs ?? []).map((t: any) => [t.email, t.full_name || t.username || t.email]));
+    const profById = new Map<string, any>((profs ?? []).map((p: any) => [p.id, p]));
+    const compById = new Map<string, any>((comps ?? []).map((c: any) => [c.id, c.name]));
+    const tecByEmail = new Map<string, any>((techProfs ?? []).map((t: any) => [t.email, t.full_name || t.username || t.email]));
 
     // Historiales para calcular tiempos por estado + fechas de asignación
     const tIds = tRaw.map((r) => r.id);

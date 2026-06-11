@@ -1,2 +1,0 @@
-ALTER TABLE public.entradas DROP CONSTRAINT IF EXISTS tickets_status_check;
-ALTER TABLE public.entradas ADD CONSTRAINT tickets_status_check CHECK (status = ANY (ARRAY['pendiente'::text, 'en_proceso'::text, 'en_revision'::text, 'finalizado'::text]));
