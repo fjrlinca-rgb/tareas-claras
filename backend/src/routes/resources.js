@@ -1,8 +1,12 @@
 /**
- * CRUD genérico sobre tablas de negocio. Para Fase 1 exponemos lectura y
- * escritura básicas con auditoría (req.db) y validación de rol mínima.
- * Las rutas que necesiten lógica específica se moverán a archivos dedicados
- * en fases siguientes.
+ * Generic CRUD API used by the frontend Supabase-compatibility shim.
+ * Endpoints accept REAL table names from a whitelist.
+ *
+ *   POST   /api/db/:table/query   -> select with filters/order/limit/count
+ *   POST   /api/db/:table         -> insert (single or array) returning rows
+ *   PATCH  /api/db/:table         -> update with filters returning rows
+ *   DELETE /api/db/:table         -> delete with filters returning rows
+ *   POST   /api/rpc/:fn           -> call whitelisted SQL function
  */
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
@@ -12,107 +16,194 @@ import { getIO } from "../sockets/io.js";
 const router = Router();
 router.use(requireAuth, withAuditClient);
 
-const TABLES = {
-  tickets: { table: "entradas", broadcast: "entradas" },
-  ordenes: { table: "ordenes_trabajo", broadcast: "ordenes_trabajo" },
-  actividades: { table: "actividades_tecnicas", broadcast: "actividades_tecnicas" },
-  technicians: { table: "technicians" },
-  companies: { table: "companies" },
-  notifications: { table: "notifications", broadcast: "notifications" },
-  ticket_history: { table: "ticket_history" },
-  historial_ordenes: { table: "historial_ordenes" },
-  reportes_diarios: { table: "reportes_diarios" },
-  attachments: { table: "attachments" },
-};
+// Tables exposed via the generic API (real names).
+const TABLES = new Set([
+  "entradas",
+  "ordenes_trabajo",
+  "actividades_tecnicas",
+  "technicians",
+  "companies",
+  "notifications",
+  "ticket_history",
+  "historial_ordenes",
+  "reportes_diarios",
+  "attachments",
+  "profiles",
+  "user_roles",
+  "usuarios",
+]);
 
-function cfg(name) {
-  const c = TABLES[name];
-  if (!c) return null;
-  return c;
-}
+// Tables that broadcast realtime change events.
+const BROADCAST = new Set([
+  "entradas",
+  "ordenes_trabajo",
+  "actividades_tecnicas",
+  "notifications",
+  "attachments",
+  "companies",
+  "ticket_history",
+  "historial_ordenes",
+  "technicians",
+]);
 
-// GET /api/:resource?limit=&offset=&order=col.desc&col=eq.value
-router.get("/:resource", async (req, res) => {
-  const c = cfg(req.params.resource);
-  if (!c) return res.status(404).json({ error: "Recurso desconocido" });
+// Whitelisted RPC functions.
+const RPCS = new Set([
+  "has_role",
+  "puede_crear_ordenes",
+  "generar_snapshot_diario",
+]);
 
-  const limit = Math.min(Number(req.query.limit ?? 200), 1000);
-  const offset = Number(req.query.offset ?? 0);
-  const order = String(req.query.order ?? "created_at.desc");
-  const [orderCol, orderDir] = order.split(".");
-  const params = [];
-  const where = [];
-  for (const [k, v] of Object.entries(req.query)) {
-    if (["limit","offset","order"].includes(k)) continue;
-    const [op, val] = String(v).includes(".") ? String(v).split(/\.(.+)/) : ["eq", String(v)];
-    if (!/^[a-zA-Z0-9_]+$/.test(k)) continue;
-    params.push(val);
-    if (op === "eq") where.push(`${k} = $${params.length}`);
-    else if (op === "neq") where.push(`${k} <> $${params.length}`);
-    else if (op === "ilike") where.push(`${k} ILIKE $${params.length}`);
-    else if (op === "in") where.push(`${k} = ANY(string_to_array($${params.length}, ','))`);
+const SAFE_IDENT = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
+function assertTable(name) {
+  if (!TABLES.has(name)) {
+    const e = new Error("Recurso desconocido"); e.status = 404; throw e;
   }
-  const sql = `SELECT * FROM ${c.table}
-               ${where.length ? "WHERE " + where.join(" AND ") : ""}
-               ORDER BY ${/^[a-zA-Z0-9_]+$/.test(orderCol) ? orderCol : "created_at"}
-                 ${orderDir === "asc" ? "ASC" : "DESC"}
-               LIMIT ${limit} OFFSET ${offset}`;
-  const { rows } = await req.db.query(sql, params);
-  res.json(rows);
-});
-
-router.get("/:resource/:id", async (req, res) => {
-  const c = cfg(req.params.resource);
-  if (!c) return res.status(404).json({ error: "Recurso desconocido" });
-  const { rows } = await req.db.query(`SELECT * FROM ${c.table} WHERE id = $1`, [req.params.id]);
-  if (!rows[0]) return res.status(404).json({ error: "No encontrado" });
-  res.json(rows[0]);
-});
-
-function buildInsert(table, body) {
-  const cols = Object.keys(body).filter((k) => /^[a-zA-Z0-9_]+$/.test(k));
-  const vals = cols.map((_, i) => `$${i + 1}`);
-  return {
-    sql: `INSERT INTO ${table} (${cols.join(",")}) VALUES (${vals.join(",")}) RETURNING *`,
-    params: cols.map((c) => body[c]),
-  };
+  return name;
 }
 
-router.post("/:resource", async (req, res) => {
-  const c = cfg(req.params.resource);
-  if (!c) return res.status(404).json({ error: "Recurso desconocido" });
-  const { sql, params } = buildInsert(c.table, req.body ?? {});
-  const { rows } = await req.db.query(sql, params);
-  if (c.broadcast) getIO()?.emit(c.broadcast, { type: "INSERT", row: rows[0] });
-  res.status(201).json(rows[0]);
+function buildWhere(filters = [], startIdx = 1) {
+  const where = [];
+  const params = [];
+  let i = startIdx;
+  for (const f of filters) {
+    if (!f || !SAFE_IDENT.test(f.col)) continue;
+    const { col, op, value } = f;
+    switch (op) {
+      case "eq":  where.push(`${col} = $${i++}`);  params.push(value); break;
+      case "neq": where.push(`${col} <> $${i++}`); params.push(value); break;
+      case "ilike": where.push(`${col} ILIKE $${i++}`); params.push(value); break;
+      case "like":  where.push(`${col} LIKE $${i++}`);  params.push(value); break;
+      case "gt":  where.push(`${col} > $${i++}`);  params.push(value); break;
+      case "gte": where.push(`${col} >= $${i++}`); params.push(value); break;
+      case "lt":  where.push(`${col} < $${i++}`);  params.push(value); break;
+      case "lte": where.push(`${col} <= $${i++}`); params.push(value); break;
+      case "is":
+        if (value === null) where.push(`${col} IS NULL`);
+        else if (value === true) where.push(`${col} IS TRUE`);
+        else if (value === false) where.push(`${col} IS FALSE`);
+        break;
+      case "in": {
+        const arr = Array.isArray(value) ? value : [];
+        if (!arr.length) { where.push("FALSE"); break; }
+        const placeholders = arr.map(() => `$${i++}`);
+        where.push(`${col} IN (${placeholders.join(",")})`);
+        params.push(...arr);
+        break;
+      }
+      default: break;
+    }
+  }
+  return { where, params };
+}
+
+router.post("/db/:table/query", async (req, res, next) => {
+  try {
+    const table = assertTable(req.params.table);
+    const { filters = [], select = "*", order, limit, offset, count, head, single } = req.body ?? {};
+    const cols = select === "*" || !select
+      ? "*"
+      : String(select).split(",").map((s) => s.trim()).filter((s) => SAFE_IDENT.test(s)).join(",") || "*";
+    const { where, params } = buildWhere(filters);
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+    let orderSql = "";
+    if (order && SAFE_IDENT.test(order.col)) {
+      orderSql = `ORDER BY ${order.col} ${order.ascending ? "ASC" : "DESC"} NULLS LAST`;
+    }
+    const limitSql = limit ? `LIMIT ${Math.min(Number(limit), 5000)}` : "";
+    const offsetSql = offset ? `OFFSET ${Number(offset)}` : "";
+
+    let total = null;
+    if (count === "exact") {
+      const r = await req.db.query(`SELECT COUNT(*)::int AS c FROM ${table} ${whereSql}`, params);
+      total = r.rows[0].c;
+    }
+    let data = [];
+    if (!head) {
+      const sql = `SELECT ${cols} FROM ${table} ${whereSql} ${orderSql} ${limitSql} ${offsetSql}`;
+      const r = await req.db.query(sql, params);
+      data = r.rows;
+    }
+    if (single) {
+      if (data.length > 1) return res.status(406).json({ error: "Multiple rows" });
+      return res.json({ data: data[0] ?? null, count: total });
+    }
+    res.json({ data, count: total });
+  } catch (e) { next(e); }
 });
 
-router.patch("/:resource/:id", async (req, res) => {
-  const c = cfg(req.params.resource);
-  if (!c) return res.status(404).json({ error: "Recurso desconocido" });
-  const cols = Object.keys(req.body ?? {}).filter((k) => /^[a-zA-Z0-9_]+$/.test(k));
-  if (!cols.length) return res.status(400).json({ error: "Sin cambios" });
-  const sets = cols.map((c, i) => `${c} = $${i + 1}`);
-  const params = cols.map((c) => req.body[c]);
-  params.push(req.params.id);
-  const { rows } = await req.db.query(
-    `UPDATE ${c.table} SET ${sets.join(",")} WHERE id = $${params.length} RETURNING *`,
-    params
-  );
-  if (!rows[0]) return res.status(404).json({ error: "No encontrado" });
-  if (c.broadcast) getIO()?.emit(c.broadcast, { type: "UPDATE", row: rows[0] });
-  res.json(rows[0]);
+router.post("/db/:table", async (req, res, next) => {
+  try {
+    const table = assertTable(req.params.table);
+    const body = req.body;
+    const rowsIn = Array.isArray(body) ? body : [body];
+    if (!rowsIn.length) return res.json({ data: [] });
+    const cols = Object.keys(rowsIn[0]).filter((k) => SAFE_IDENT.test(k));
+    if (!cols.length) return res.status(400).json({ error: "Sin columnas válidas" });
+    const valuesSql = [];
+    const params = [];
+    let i = 1;
+    for (const r of rowsIn) {
+      valuesSql.push(`(${cols.map(() => `$${i++}`).join(",")})`);
+      for (const c of cols) params.push(r[c] ?? null);
+    }
+    const sql = `INSERT INTO ${table} (${cols.join(",")}) VALUES ${valuesSql.join(",")} RETURNING *`;
+    const { rows } = await req.db.query(sql, params);
+    if (BROADCAST.has(table)) {
+      for (const row of rows) getIO()?.emit(`table:${table}`, { eventType: "INSERT", new: row, old: null });
+    }
+    res.status(201).json({ data: rows });
+  } catch (e) { next(e); }
 });
 
-router.delete("/:resource/:id", async (req, res) => {
-  const c = cfg(req.params.resource);
-  if (!c) return res.status(404).json({ error: "Recurso desconocido" });
-  const { rowCount, rows } = await req.db.query(
-    `DELETE FROM ${c.table} WHERE id = $1 RETURNING *`, [req.params.id]
-  );
-  if (!rowCount) return res.status(404).json({ error: "No encontrado" });
-  if (c.broadcast) getIO()?.emit(c.broadcast, { type: "DELETE", row: rows[0] });
-  res.json({ ok: true });
+router.patch("/db/:table", async (req, res, next) => {
+  try {
+    const table = assertTable(req.params.table);
+    const { filters = [], values = {} } = req.body ?? {};
+    const cols = Object.keys(values).filter((k) => SAFE_IDENT.test(k));
+    if (!cols.length) return res.status(400).json({ error: "Sin valores" });
+    const setParts = cols.map((c, idx) => `${c} = $${idx + 1}`);
+    const params = cols.map((c) => values[c]);
+    const { where, params: wp } = buildWhere(filters, params.length + 1);
+    if (!where.length) return res.status(400).json({ error: "Filtros requeridos" });
+    params.push(...wp);
+    const sql = `UPDATE ${table} SET ${setParts.join(",")} WHERE ${where.join(" AND ")} RETURNING *`;
+    const { rows } = await req.db.query(sql, params);
+    if (BROADCAST.has(table)) {
+      for (const row of rows) getIO()?.emit(`table:${table}`, { eventType: "UPDATE", new: row, old: null });
+    }
+    res.json({ data: rows });
+  } catch (e) { next(e); }
+});
+
+router.delete("/db/:table", async (req, res, next) => {
+  try {
+    const table = assertTable(req.params.table);
+    const { filters = [] } = req.body ?? {};
+    const { where, params } = buildWhere(filters);
+    if (!where.length) return res.status(400).json({ error: "Filtros requeridos" });
+    const sql = `DELETE FROM ${table} WHERE ${where.join(" AND ")} RETURNING *`;
+    const { rows } = await req.db.query(sql, params);
+    if (BROADCAST.has(table)) {
+      for (const row of rows) getIO()?.emit(`table:${table}`, { eventType: "DELETE", new: null, old: row });
+    }
+    res.json({ data: rows });
+  } catch (e) { next(e); }
+});
+
+router.post("/rpc/:fn", async (req, res, next) => {
+  try {
+    const fn = req.params.fn;
+    if (!RPCS.has(fn) || !SAFE_IDENT.test(fn)) return res.status(404).json({ error: "RPC desconocido" });
+    const args = req.body ?? {};
+    const keys = Object.keys(args);
+    const params = keys.map((k) => args[k]);
+    const named = keys.map((k, i) => `${k} := $${i + 1}`).join(",");
+    const sql = `SELECT ${fn}(${named}) AS result`;
+    const { rows } = await req.db.query(sql, params);
+    res.json({ data: rows[0]?.result ?? null });
+  } catch (e) { next(e); }
 });
 
 export default router;

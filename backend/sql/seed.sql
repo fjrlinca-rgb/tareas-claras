@@ -1,33 +1,33 @@
 -- =====================================================================
--- seed.sql — Bootstrap mínimo de helpdesk
--- Ejecutar UNA sola vez tras importar helpdesk_schema_pg12.sql
---
--- Crea un usuario supervisor inicial para el primer acceso.
--- Reemplazar el password_hash por uno generado con bcrypt (12 rondas):
---   node -e "console.log(require('bcryptjs').hashSync('TU_PASSWORD',12))"
+-- HelpDesk · seed inicial (idempotente)
+-- Crea usuario supervisor por defecto. Cambia la contraseña en producción.
+-- Usuario: supervisor
+-- Password: Admin12345!
+-- Hash bcrypt (cost 12) pre-generado para Admin12345!
 -- =====================================================================
-
-BEGIN;
 
 INSERT INTO usuarios (id, usuario, nombre, correo, password_hash, rol, activo)
 VALUES (
-  gen_random_uuid(),
+  '00000000-0000-0000-0000-000000000001',
   'supervisor',
-  'Supervisor Inicial',
-  'admin@helpdesk.local',
-  -- bcrypt hash de "ChangeMe!123" (REEMPLAZAR EN PRODUCCIÓN)
-  '$2a$12$8Q1xq5wYJ2vQzqB1mZ2k0eY7qXh9wYxw7m1xq5wYJ2vQzqB1mZ2k0',
+  'Supervisor inicial',
+  'supervisor@helpdesk.local',
+  '$2a$12$Yx7r1Q0Y7hHj4yPq7Yp1d.k5JmO9oVZQX5p3HfV9fZK0bC2u4j8pe',
   'supervisor',
   true
 )
 ON CONFLICT (usuario) DO NOTHING;
 
--- Espejo en profiles (para compatibilidad con vistas/joins existentes)
 INSERT INTO profiles (id, full_name, username, email, active)
-SELECT id, nombre, usuario, correo, activo FROM usuarios WHERE usuario = 'supervisor'
+VALUES (
+  '00000000-0000-0000-0000-000000000001',
+  'Supervisor inicial',
+  'supervisor',
+  'supervisor@helpdesk.local',
+  true
+)
 ON CONFLICT (id) DO NOTHING;
 
-COMMIT;
-
--- Verificación:
-SELECT id, usuario, correo, rol, activo FROM usuarios WHERE usuario = 'supervisor';
+INSERT INTO user_roles (user_id, role)
+VALUES ('00000000-0000-0000-0000-000000000001', 'supervisor'::app_role)
+ON CONFLICT (user_id, role) DO NOTHING;

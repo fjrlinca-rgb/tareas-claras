@@ -18,7 +18,7 @@ const app = express();
 app.set("trust proxy", 1);
 app.use(helmet({
   crossOriginResourcePolicy: false,
-  contentSecurityPolicy: false, // Swagger UI inline styles
+  contentSecurityPolicy: false,
 }));
 app.use(cors({
   origin: process.env.CORS_ORIGIN?.split(",") ?? true,
@@ -26,7 +26,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "2mb" }));
 app.use(cookieParser());
-app.use(rateLimit({ windowMs: 60_000, max: 600 }));
+app.use(rateLimit({ windowMs: 60_000, max: 1200 }));
 
 app.get("/api/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));
 app.get("/api/docs.json", (_req, res) => res.json(openapiSpec));
@@ -48,7 +48,7 @@ const server = http.createServer(app);
 initIO(server);
 
 const PORT = Number(process.env.PORT ?? 3001);
-server.listen(PORT, () => console.log(`[helpdesk-backend] :${PORT}`));
+server.listen(PORT, () => console.log(`[helpdesk-backend] listening on :${PORT}`));
 
 for (const sig of ["SIGINT", "SIGTERM"]) {
   process.on(sig, () => {

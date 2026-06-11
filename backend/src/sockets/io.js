@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
-import cookie from "cookie-parser";
 import { verifyToken, COOKIE_NAME } from "../lib/jwt.js";
+import cookie from "cookie";
 
 let io = null;
 
@@ -16,21 +16,19 @@ export function initIO(httpServer) {
   io.use((socket, next) => {
     try {
       const raw = socket.handshake.headers.cookie ?? "";
-      const cookies = Object.fromEntries(
-        raw.split(";").map((c) => c.trim().split("=").map(decodeURIComponent))
-      );
-      const token = cookies[COOKIE_NAME];
-      if (!token) return next(new Error("unauthorized"));
+      const parsed = cookie.parse(raw || "");
+      const token = parsed[COOKIE_NAME];
+      if (!token) return next(new Error("Sin sesión"));
       const payload = verifyToken(token);
-      socket.data.user = payload;
+      socket.data.user = { id: payload.sub, rol: payload.rol, usuario: payload.usuario };
       next();
     } catch {
-      next(new Error("unauthorized"));
+      next(new Error("Token inválido"));
     }
   });
 
   io.on("connection", (socket) => {
-    socket.join(`user:${socket.data.user.sub}`);
+    socket.join(`user:${socket.data.user.id}`);
   });
 
   return io;
