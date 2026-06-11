@@ -132,7 +132,7 @@ const auth = {
 
 type Filter = { col: string; op: string; value: any };
 
-class QueryBuilder implements PromiseLike<{ data: any; error: any; count: number | null }> {
+class QueryBuilder implements PromiseLike<{ data: any[] & any; error: any; count: number | null }> {
   private mode: "select" | "insert" | "update" | "delete" = "select";
   private filters: Filter[] = [];
   private selectCols = "*";
