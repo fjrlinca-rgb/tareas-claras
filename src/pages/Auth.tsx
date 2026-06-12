@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Headset, Lock, User, Eye, EyeOff, Activity } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -16,32 +17,14 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    const id = username.trim();
+    if (!id) return toast.error("Ingrese su usuario");
     setLoading(true);
-    try {
-      const id = username.trim();
-      if (!id) { setLoading(false); return toast.error("Ingrese su usuario"); }
-
-      let email = id;
-      if (!id.includes("@")) {
-        const { data, error } = await supabase.functions.invoke("resolve-username", {
-          body: { username: id },
-        });
-        if (error || !data?.email) {
-          setLoading(false);
-          return toast.error(data?.error || error?.message || "Usuario no encontrado");
-        }
-        email = data.email;
-      }
-
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      setLoading(false);
-      if (error) return toast.error("Usuario o contraseña incorrectos");
-      toast.success("Bienvenido a HelpDesk NetExpert");
-      navigate("/");
-    } catch (err: any) {
-      setLoading(false);
-      toast.error(err?.message || "Error al iniciar sesión");
-    }
+    const { error } = await signIn(id, password);
+    setLoading(false);
+    if (error) return toast.error(error);
+    toast.success("Bienvenido a HelpDesk NetExpert");
+    navigate("/");
   };
 
   return (
