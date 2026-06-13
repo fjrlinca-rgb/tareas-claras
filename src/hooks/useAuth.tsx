@@ -1,22 +1,21 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { login as apiLogin, logout as apiLogout, me as apiMe, type ApiUser } from "@/lib/api";
 
-// Mantiene la misma forma de `user` usada por el resto del frontend
-// (id + email + user_metadata) para no romper componentes existentes.
-type User = {
+export type User = {
   id: string;
   email: string;
   user_metadata?: Record<string, any>;
 };
-type Session = { user: User; access_token: string };
+
+export type Session = { user: User; access_token: string } | null;
 
 interface AuthCtx {
   user: User | null;
-  session: Session | null;
+  session: Session;
   loading: boolean;
   signIn: (usuario: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
-  refresh: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const Ctx = createContext<AuthCtx>({
@@ -25,7 +24,7 @@ const Ctx = createContext<AuthCtx>({
   loading: true,
   signIn: async () => ({ error: "not-ready" }),
   signOut: async () => {},
-  refresh: async () => {},
+  refreshUser: async () => {},
 });
 
 function toUser(u: ApiUser | null | undefined): User | null {
@@ -41,17 +40,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refresh = useCallback(async () => {
+  const refreshUser = useCallback(async () => {
     const r = await apiMe();
     setUser(r.ok ? toUser(r.data?.user) : null);
   }, []);
 
   useEffect(() => {
     (async () => {
-      await refresh();
+      await refreshUser();
       setLoading(false);
     })();
-  }, [refresh]);
+  }, [refreshUser]);
 
   const signIn: AuthCtx["signIn"] = async (usuario, password) => {
     const r = await apiLogin(usuario, password);
@@ -67,10 +66,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
-  const session: Session | null = user ? { user, access_token: "cookie" } : null;
+  const session: Session = user ? { user, access_token: "cookie" } : null;
 
   return (
-    <Ctx.Provider value={{ user, session, loading, signIn, signOut, refresh }}>
+    <Ctx.Provider value={{ user, session, loading, signIn, signOut, refreshUser }}>
       {children}
     </Ctx.Provider>
   );
