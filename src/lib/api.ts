@@ -4,7 +4,7 @@
  * envíe/reciba la cookie HttpOnly `hd_session` emitida por el backend.
  */
 export const API_URL =
-  (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:3001";
+  (import.meta.env.VITE_API_URL as string | undefined) ?? "";
 
 export interface ApiResult<T> {
   ok: boolean;
