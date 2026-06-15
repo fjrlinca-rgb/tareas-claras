@@ -10,7 +10,7 @@
 import { io, type Socket } from "socket.io-client";
 
 const API_URL =
-  (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:3001";
+  (import.meta.env.VITE_API_URL as string | undefined) ?? "";
 const SOCKET_URL =
   (import.meta.env.VITE_SOCKET_URL as string | undefined) ?? API_URL;
 
