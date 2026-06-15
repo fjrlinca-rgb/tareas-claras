@@ -35,7 +35,7 @@ export const ALLOWED_MIMES = new Set([
 ]);
 
 const API_URL =
-  (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:3001";
+  (import.meta.env.VITE_API_URL as string | undefined) ?? "";
 
 export function bucketFor(parentType: ParentType): string {
   if (parentType === "ticket") return "tickets-files";
