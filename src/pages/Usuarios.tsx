@@ -4,6 +4,7 @@ import {
   UserPlus, RefreshCw, KeyRound, Pencil, Trash2, Plus, Briefcase, ClipboardList,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole, AppRole } from "@/hooks/useUserRole";
 import { AppLayout } from "@/components/AppLayout";
@@ -93,24 +94,30 @@ function UserDialog({
       if (password !== confirm) return toast.error("Las contraseñas no coinciden");
     }
     setBusy(true);
+    // Backend schema: { usuario, nombre, correo, password, rol, activo, company_id }
     const payload: Record<string, unknown> = {
-      email, full_name: fullName, username: username || null,
+      usuario: username || email,
+      nombre: fullName || email,
+      correo: email,
+      rol: role,
+      activo: active,
       company_id: companyId === "none" ? null : companyId,
-      role, active,
     };
     if (password) payload.password = password;
 
-    let res;
-    if (isEdit) {
-      res = await supabase.functions.invoke("admin-update-user", {
-        body: { action: "update", user_id: editing!.id, ...payload },
-      });
-    } else {
-      res = await supabase.functions.invoke("admin-create-user", { body: payload });
-    }
+    const res = isEdit
+      ? await apiFetch(`/api/admin/users/${editing!.id}`, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        })
+      : await apiFetch(`/api/admin/users`, {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
     setBusy(false);
-    const err = (res.data as any)?.error ?? res.error?.message;
-    if (err) return toast.error(err);
+    if (!res.ok) {
+      return toast.error(res.error?.error ?? res.error?.message ?? "Error al guardar");
+    }
     toast.success(isEdit ? "Usuario actualizado" : `Usuario creado · contraseña: ${password}`);
     onOpenChange(false);
     onSaved();
@@ -225,12 +232,14 @@ function CompanyDialog({ open, onOpenChange, editing, onSaved }: {
     if (password.length < 8) return toast.error("Contraseña mínima de 8 caracteres");
     if (password !== confirm) return toast.error("Las contraseñas no coinciden");
     setBusy(true);
-    const res = await supabase.functions.invoke("admin-create-company", {
-      body: { name, contact, email, username, password, active },
+    const res = await apiFetch(`/api/admin/companies`, {
+      method: "POST",
+      body: JSON.stringify({ name, contact, email, username, password, active }),
     });
     setBusy(false);
-    const err = (res.data as any)?.error ?? res.error?.message;
-    if (err) return toast.error(err);
+    if (!res.ok) {
+      return toast.error(res.error?.error ?? res.error?.message ?? "Error al guardar");
+    }
     toast.success(`Empresa creada · contraseña: ${password}`);
     onOpenChange(false); onSaved();
   };
@@ -322,14 +331,14 @@ const UsuariosPage = () => {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: profiles }, { data: roles }, { data: cos }] = await Promise.all([
+    const [{ data: profiles }, { data: usuariosRows }, { data: cos }] = await Promise.all([
       supabase.from("profiles").select("id,email,created_at,full_name,username,company_id,active").order("created_at", { ascending: false }),
-      supabase.from("user_roles").select("user_id,role"),
+      supabase.from("usuarios").select("id,rol"),
       supabase.from("companies").select("id,name,contact,email,active,puede_crear_ordenes,created_at").order("created_at", { ascending: false }),
     ]);
     const rolesBy = new Map<string, AppRole[]>();
-    (roles ?? []).forEach((r: any) => {
-      const arr = rolesBy.get(r.user_id) ?? []; arr.push(r.role as AppRole); rolesBy.set(r.user_id, arr);
+    (usuariosRows ?? []).forEach((r: any) => {
+      if (r?.id && r?.rol) rolesBy.set(r.id, [r.rol as AppRole]);
     });
     const coMap = new Map<string, any>((cos ?? []).map((c: any) => [c.id, c] as const));
     const items: UserItem[] = (profiles ?? []).map((p: any) => {
@@ -364,12 +373,11 @@ const UsuariosPage = () => {
 
   const removeUser = async () => {
     if (!delUser) return;
-    const res = await supabase.functions.invoke("admin-update-user", {
-      body: { action: "delete", user_id: delUser.id },
-    });
-    const err = (res.data as any)?.error ?? res.error?.message;
+    const res = await apiFetch(`/api/admin/users/${delUser.id}`, { method: "DELETE" });
     setDelUser(null);
-    if (err) return toast.error(err);
+    if (!res.ok) {
+      return toast.error(res.error?.error ?? res.error?.message ?? "Error al eliminar");
+    }
     toast.success("Usuario eliminado"); load();
   };
 

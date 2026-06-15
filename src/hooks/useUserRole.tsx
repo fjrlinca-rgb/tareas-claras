@@ -1,33 +1,28 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
 export type AppRole = "cliente" | "supervisor" | "tecnico";
 
+/**
+ * Source of truth for the current user's role: the JWT/session payload
+ * returned by `/api/auth/me` (exposed through useAuth as
+ * `user.user_metadata.rol`). No backend round-trip needed.
+ */
 export function useUserRole() {
   const { user, loading: authLoading } = useAuth();
-  const [roles, setRoles] = useState<AppRole[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) { setRoles([]); setLoading(false); return; }
-    let active = true;
-    (async () => {
-      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-      if (active) {
-        setRoles((data ?? []).map((r: any) => r.role as AppRole));
-        setLoading(false);
-      }
-    })();
-    return () => { active = false; };
-  }, [user, authLoading]);
+  const rawRole = (user?.user_metadata?.rol ?? "") as string;
+  const primary: AppRole =
+    rawRole === "supervisor" || rawRole === "tecnico" || rawRole === "cliente"
+      ? (rawRole as AppRole)
+      : "cliente";
+  const roles: AppRole[] = user ? [primary] : [];
 
-  const isSupervisor = roles.includes("supervisor");
-  const isTecnico = roles.includes("tecnico");
-  const isCliente = roles.includes("cliente") || (!isSupervisor && !isTecnico);
-  // Primary effective role: supervisor > tecnico > cliente
-  const primary: AppRole = isSupervisor ? "supervisor" : isTecnico ? "tecnico" : "cliente";
-
-  return { roles, primary, isSupervisor, isTecnico, isCliente, loading };
+  return {
+    roles,
+    primary,
+    isSupervisor: primary === "supervisor",
+    isTecnico: primary === "tecnico",
+    isCliente: primary === "cliente",
+    loading: authLoading,
+  };
 }
