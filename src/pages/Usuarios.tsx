@@ -331,26 +331,30 @@ const UsuariosPage = () => {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: profiles }, { data: usuariosRows }, { data: cos }] = await Promise.all([
-      supabase.from("profiles").select("id,email,created_at,full_name,username,company_id,active").order("created_at", { ascending: false }),
-      supabase.from("usuarios").select("id,rol"),
-      supabase.from("companies").select("id,name,contact,email,active,puede_crear_ordenes,created_at").order("created_at", { ascending: false }),
+    const [uRes, cRes] = await Promise.all([
+      apiFetch<{ data: any[] }>(`/api/admin/users`),
+      apiFetch<{ data: CompanyRow[] }>(`/api/admin/companies`),
     ]);
-    const rolesBy = new Map<string, AppRole[]>();
-    (usuariosRows ?? []).forEach((r: any) => {
-      if (r?.id && r?.rol) rolesBy.set(r.id, [r.rol as AppRole]);
-    });
-    const coMap = new Map<string, any>((cos ?? []).map((c: any) => [c.id, c] as const));
-    const items: UserItem[] = (profiles ?? []).map((p: any) => {
-      const rs = rolesBy.get(p.id) ?? ["cliente"];
-      const co = p.company_id ? coMap.get(p.company_id) : null;
+    if (!uRes.ok) toast.error(uRes.error?.error ?? uRes.error?.message ?? "Error al cargar usuarios");
+    if (!cRes.ok) toast.error(cRes.error?.error ?? cRes.error?.message ?? "Error al cargar empresas");
+    const cos = cRes.data?.data ?? [];
+    const items: UserItem[] = (uRes.data?.data ?? []).map((r: any) => {
+      const primary = (r.rol as AppRole) ?? "cliente";
       return {
-        ...p, roles: rs, primary: primaryOf(rs),
-        company_name: co?.name ?? null,
-        company_puede_crear_ordenes: co?.puede_crear_ordenes ?? false,
+        id: r.id,
+        email: r.email ?? null,
+        created_at: r.created_at,
+        full_name: r.full_name ?? null,
+        username: r.username ?? null,
+        company_id: r.company_id ?? null,
+        active: r.active ?? true,
+        roles: [primary],
+        primary,
+        company_name: r.company_name ?? null,
+        company_puede_crear_ordenes: !!r.company_puede_crear_ordenes,
       };
     });
-    setUsers(items); setCompanies(cos ?? []); setLoading(false);
+    setUsers(items); setCompanies(cos); setLoading(false);
   }, []);
 
   useEffect(() => { if (isSupervisor) load(); }, [isSupervisor, load]);
@@ -358,12 +362,14 @@ const UsuariosPage = () => {
   const toggleOrdenesForUser = async (u: UserItem) => {
     if (!u.company_id) return toast.error("La empresa no está asignada a este usuario");
     const next = !u.company_puede_crear_ordenes;
-    // Optimista en ambas listas
     setUsers((prev) => prev.map((x) => x.company_id === u.company_id ? { ...x, company_puede_crear_ordenes: next } : x));
     setCompanies((prev) => prev.map((c) => c.id === u.company_id ? { ...c, puede_crear_ordenes: next } : c));
-    const { error } = await supabase.from("companies").update({ puede_crear_ordenes: next }).eq("id", u.company_id);
-    if (error) {
-      toast.error(error.message);
+    const res = await apiFetch(`/api/admin/companies/${u.company_id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ puede_crear_ordenes: next }),
+    });
+    if (!res.ok) {
+      toast.error(res.error?.error ?? res.error?.message ?? "Error");
       setUsers((prev) => prev.map((x) => x.company_id === u.company_id ? { ...x, company_puede_crear_ordenes: !next } : x));
       setCompanies((prev) => prev.map((c) => c.id === u.company_id ? { ...c, puede_crear_ordenes: !next } : c));
       return;
@@ -383,20 +389,24 @@ const UsuariosPage = () => {
 
   const removeCompany = async () => {
     if (!delCo) return;
-    const { error } = await supabase.from("companies").delete().eq("id", delCo.id);
+    const res = await apiFetch(`/api/admin/companies/${delCo.id}`, { method: "DELETE" });
     setDelCo(null);
-    if (error) return toast.error(error.message);
+    if (!res.ok) return toast.error(res.error?.error ?? res.error?.message ?? "Error");
     toast.success("Empresa eliminada"); load();
   };
 
   const toggleOrdenes = async (c: CompanyRow) => {
     const next = !c.puede_crear_ordenes;
-    // Optimista
     setCompanies((prev) => prev.map((x) => x.id === c.id ? { ...x, puede_crear_ordenes: next } : x));
-    const { error } = await supabase.from("companies").update({ puede_crear_ordenes: next }).eq("id", c.id);
-    if (error) {
-      toast.error(error.message);
+    setUsers((prev) => prev.map((x) => x.company_id === c.id ? { ...x, company_puede_crear_ordenes: next } : x));
+    const res = await apiFetch(`/api/admin/companies/${c.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ puede_crear_ordenes: next }),
+    });
+    if (!res.ok) {
+      toast.error(res.error?.error ?? res.error?.message ?? "Error");
       setCompanies((prev) => prev.map((x) => x.id === c.id ? { ...x, puede_crear_ordenes: !next } : x));
+      setUsers((prev) => prev.map((x) => x.company_id === c.id ? { ...x, company_puede_crear_ordenes: !next } : x));
       return;
     }
     toast.success(next ? "Orden de trabajo habilitada" : "Orden de trabajo deshabilitada");
