@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Headset, Lock, User, Eye, EyeOff, Activity } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,11 +9,18 @@ import { toast } from "sonner";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // If a session is already (or becomes) active, leave /auth.
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/", { replace: true });
+    }
+  }, [authLoading, user, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +31,7 @@ const Auth = () => {
     setLoading(false);
     if (error) return toast.error(error);
     toast.success("Bienvenido a HelpDesk NetExpert");
-    navigate("/");
+    // Navigation happens via the useEffect above as soon as `user` is set.
   };
 
   return (
