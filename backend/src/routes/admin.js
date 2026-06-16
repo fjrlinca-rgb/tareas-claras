@@ -44,6 +44,67 @@ const userSchema = z.object({
   company_id: z.string().uuid().nullable().optional(),
 });
 
+// List users (joins usuarios + profiles + companies so the UI gets everything in one call).
+router.get("/users", async (_req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT
+         u.id, u.usuario AS username, u.nombre AS full_name, u.correo AS email,
+         u.rol, u.activo AS active, u.created_at,
+         p.company_id,
+         c.name AS company_name,
+         COALESCE(c.puede_crear_ordenes, false) AS company_puede_crear_ordenes
+       FROM usuarios u
+       LEFT JOIN profiles p ON p.id = u.id
+       LEFT JOIN companies c ON c.id = p.company_id
+       ORDER BY u.created_at DESC`
+    );
+    res.json({ data: rows });
+  } catch (e) { next(e); }
+});
+
+// List companies.
+router.get("/companies", async (_req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, name, contact, email, active, puede_crear_ordenes, created_at
+       FROM companies
+       ORDER BY created_at DESC`
+    );
+    res.json({ data: rows });
+  } catch (e) { next(e); }
+});
+
+router.patch("/companies/:id", async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const body = req.body ?? {};
+    const map = {
+      name: "name", contact: "contact", email: "email",
+      active: "active", puede_crear_ordenes: "puede_crear_ordenes",
+    };
+    const sets = []; const params = [];
+    for (const [k, col] of Object.entries(map)) {
+      if (body[k] !== undefined) { params.push(body[k]); sets.push(`${col} = $${params.length}`); }
+    }
+    if (!sets.length) return res.status(400).json({ error: "Sin cambios" });
+    params.push(id);
+    const { rows } = await req.db.query(
+      `UPDATE companies SET ${sets.join(",")} WHERE id = $${params.length} RETURNING *`,
+      params
+    );
+    if (!rows[0]) return res.status(404).json({ error: "No encontrada" });
+    res.json(rows[0]);
+  } catch (e) { next(e); }
+});
+
+router.delete("/companies/:id", async (req, res, next) => {
+  try {
+    await req.db.query("DELETE FROM companies WHERE id = $1", [req.params.id]);
+    res.json({ ok: true });
+  } catch (e) { next(e); }
+});
+
 router.post("/users", async (req, res) => {
   const parsed = userSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
