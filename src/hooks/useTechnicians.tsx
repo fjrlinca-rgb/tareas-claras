@@ -67,7 +67,7 @@ export function useTechnicians(enabled: boolean = true) {
         .map((p: any) => {
           const key = String(p.email).toLowerCase();
           const c = counts.get(key) ?? { active: 0, total: 0 };
-          const name = p.full_name || p.username || null;
+          const name = p.username || p.full_name || null;
           return {
             id: p.id,
             email: p.email,

@@ -33,7 +33,7 @@ export function useTechnicianNames() {
       const m = new Map<string, string>();
       (Array.isArray(profs) ? profs : []).forEach((p: any) => {
         if (!p?.email) return;
-        const name = p.full_name || p.username;
+        const name = p.username || p.full_name;
         if (name) m.set(String(p.email).toLowerCase(), name);
       });
       setMap(m);
