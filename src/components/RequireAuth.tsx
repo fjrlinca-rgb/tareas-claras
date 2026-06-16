@@ -10,8 +10,9 @@ export const RequireAuth = ({ children }: { children: ReactNode }) => {
     if (!loading && !user) navigate("/auth", { replace: true });
   }, [loading, user, navigate]);
 
-  if (loading || !user) {
+  if (loading) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Cargando...</div>;
   }
+  if (!user) return null;
   return <>{children}</>;
 };

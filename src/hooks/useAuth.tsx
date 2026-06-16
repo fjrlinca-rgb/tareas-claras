@@ -57,7 +57,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!r.ok) {
       return { error: r.error?.error ?? r.error?.message ?? "Credenciales inválidas" };
     }
-    setUser(toUser(r.data?.user));
+    const next = toUser(r.data?.user);
+    if (next) {
+      setUser(next);
+    } else {
+      // Fallback: confirm session via /me if login response shape is unexpected
+      const me = await apiMe();
+      setUser(me.ok ? toUser(me.data?.user) : null);
+    }
     return { error: null };
   };
 
