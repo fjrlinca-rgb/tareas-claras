@@ -219,11 +219,12 @@ function CompanyDialog({ open, onOpenChange, editing, onSaved }: {
     if (!name.trim()) return toast.error("Nombre de empresa requerido");
     if (isEdit) {
       setBusy(true);
-      const { error } = await supabase.from("companies").update({
-        name, contact: contact || null, email: email || null, active,
-      }).eq("id", editing!.id);
+      const res = await apiFetch(`/api/admin/companies/${editing!.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ name, contact: contact || null, email: email || null, active }),
+      });
       setBusy(false);
-      if (error) return toast.error(error.message);
+      if (!res.ok) return toast.error(res.error?.error ?? res.error?.message ?? "Error al guardar");
       toast.success("Empresa actualizada");
       onOpenChange(false); onSaved(); return;
     }
